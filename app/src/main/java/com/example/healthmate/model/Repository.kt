@@ -113,4 +113,133 @@ class Repository @Inject constructor(
     } catch (e: Exception){
         Result.failure(e)
     }
+
+    suspend fun login(phone: String): Result<String> = try {
+        val response = apiService.login(LoginRequest(phone))
+        if (response.success && response.token != null) {
+            Result.success(response.token)
+        } else {
+            Result.failure(Exception(response.error ?: "Login Failed"))
+        }
+    } catch (e: Exception){
+        Result.failure(e)
+    }
+
+    suspend fun verifyOTP(phone: String, otp: String): Result<String> = try {
+        val response = apiService.verifyOTP(OtpVerificationRequest(phone, otp))
+        if (response.success && response.token != null) {
+            Result.success(response.token)
+        } else {
+            Result.failure(Exception(response.error ?: "OTP Verification Failed"))
+        }
+    } catch (e: Exception){
+        Result.failure(e)
+    }
+
+    // ORDER RELATED OPERATIONS
+    suspend fun createOrder(product : List<OrderProductItem>): Result<Order> = try {
+        val response = apiService.createOrder(OrderCreateRequest(product))
+        if (response.success && response.data != null) {
+            Result.success(response.data)
+        } else {
+            Result.failure(Exception(response.message ?: "Failed to create order"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun getUserOrders(): Result<Order> = try {
+        val response = apiService.getUserOrders()
+        if (response.success && response.data != null) {
+            Result.success(response.data)
+        } else {
+            Result.failure(Exception(response.message ?: "Failed to fetch orders"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    // CHAT RELATED OPERATIONS
+    suspend fun getChatReply(message: String): Result<String> = try {
+        val response = apiService.getChatReply(ChatRequest(message))
+        if (response.success) {
+            Result.success(response.reply)
+        } else {
+            Result.failure(Exception("Failed to get chat reply"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+
+    // ADMIN RELATED OPERATIONS
+    suspend fun adminLogin(email: String, password: String): Result<Boolean> = try {
+        val response = apiService.adminLogin(AdminLoginRequest(email, password))
+        if (response.success) {
+            Result.success(true)
+        } else {
+            Result.failure(Exception(response.message ?: "Admin login failed"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun addNewProduct(
+        name: String,
+        description: String,
+        imageLink: List<String>,
+        type: MedsType,
+        quantity: Int,
+        productType: ProductType,
+        categories: List<Category>,
+        brand: String,
+        price: Int
+    ): Result<Boolean> = try {
+        val response = apiService.addNewProduct(
+            NewProductRequest(
+                name, description, imageLink, type, quantity,
+                productType, categories, brand, price
+            )
+        )
+        if (response.success) {
+            Result.success(true)
+        } else {
+            Result.failure(Exception(response.message ?: "Failed to add product"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun getAllOrders(): Result<Order> = try {
+        val response = apiService.getAllOrders()
+        if (response.success && response.data != null) {
+            Result.success(response.data)
+        } else {
+            Result.failure(Exception(response.message ?: "Failed to fetch all orders"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun getPendingOrders(): Result<Order> = try {
+        val response = apiService.getPendingOrders()
+        if (response.success && response.data != null) {
+            Result.success(response.data)
+        } else {
+            Result.failure(Exception(response.message ?: "Failed to fetch pending orders"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    suspend fun updateOrderStatus(orderId: String, status: OrderStatus): Result<Order> = try {
+        val response = apiService.updateOrderStatus(orderId, OrderStatusUpdateRequest(status))
+        if (response.success && response.data != null) {
+            Result.success(response.data)
+        } else {
+            Result.failure(Exception(response.message ?: "Failed to update order status"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }

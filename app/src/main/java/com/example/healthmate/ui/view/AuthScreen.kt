@@ -6,10 +6,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -149,7 +155,7 @@ fun SignInDialog(
     modifier: Modifier = Modifier,
     title: String,
     onDismiss: () -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: (String) -> Unit
 ) {
     var phone by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -162,8 +168,61 @@ fun SignInDialog(
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
-                
-            ) {  }
+                modifier = modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Name",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = modifier.height(24.dp))
+
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = {
+                        phone = it
+                        errorMessage = null
+                    },
+                    label = { Text("Phone number") },
+                    modifier = modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Call,
+                            contentDescription = "Phone"
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true,
+                    isError = errorMessage != null
+                )
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = modifier.padding(top = 4.dp)
+                    )
+                }
+                Spacer(modifier = modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        if (phone.isBlank()) {
+                            errorMessage = "Please Enter A Valid Number"
+                            return@Button
+                        }
+                        onSubmit(phone)
+                    },
+                    modifier = modifier.fillMaxWidth()
+                ) {
+                    Text("Continue")
+                }
+            }
         }
     }
 }

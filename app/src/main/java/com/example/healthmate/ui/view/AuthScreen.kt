@@ -17,7 +17,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -149,13 +148,44 @@ fun AuthScreen(
         }
     }
 
+    // SignIn Dialog
+    if (showSignInDialog) {
+        SignInDialog(
+            onDismiss = { showSignInDialog = false },
+            onSubmit = { phone ->
+                viewModel.login(phone)
+                showSignInDialog = false
+            }
+        )
+    }
+
+    // SignUp Dialog
+    if (showSignUpDialog) {
+        SignUpDialog(
+            onDismiss = { showSignUpDialog = false },
+            onSubmit = { name, phone, email ->
+                viewModel.signUp(name, phone, email)
+                showSignUpDialog = false
+            }
+        )
+    }
+
+    // OTP Dialog
+    if (showOTPDialog) {
+        OTPDialog(
+            onDismiss = { showOTPDialog = false },
+            onSubmit = { otp ->
+                viewModel.verifyOTP(otp)
+                showOTPDialog = false
+            }
+        )
+    }
 }
 
 
 @Composable
 fun SignInDialog(
     modifier: Modifier = Modifier,
-    title: String,
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit
 ) {

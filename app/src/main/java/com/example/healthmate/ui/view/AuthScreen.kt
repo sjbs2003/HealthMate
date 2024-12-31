@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -221,6 +223,200 @@ fun SignInDialog(
                     modifier = modifier.fillMaxWidth()
                 ) {
                     Text("Continue")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SignUpDialog(
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
+    onSubmit: (String, String, String?) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Create Account",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = modifier.height(24.dp))
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = {
+                        name = it
+                        errorMessage = null
+                    },
+                    label = { Text("Name") },
+                    modifier = modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Name"
+                        )
+                    },
+                    singleLine = true,
+                    isError = errorMessage != null
+                )
+                Spacer(modifier = modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = {
+                        phone = it
+                        errorMessage = null
+                    },
+                    label = { Text("Phone number") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Call,
+                            contentDescription = "Phone"
+                        )
+                    },
+                    modifier = modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true,
+                    isError = errorMessage != null
+                )
+                Spacer(modifier = modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        errorMessage = null
+                    },
+                    label = { Text("Email Id") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = "email"
+                        )
+                    },
+                    modifier = modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    singleLine = true
+                )
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = modifier.padding(top = 4.dp)
+                    )
+                }
+                Spacer(modifier = modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        if (name.isBlank() || phone.isBlank()) {
+                            errorMessage = "Please fill required fields correctly!"
+                            return@Button
+                        }
+                        onSubmit(name, phone, email.takeIf { it.isNotBlank() })
+                    },
+                    modifier = modifier.fillMaxWidth()
+                ) {
+                    Text("SignUp")
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun OTPDialog(
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
+    onSubmit: (String) -> Unit
+) {
+    var otp by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Enter OTP",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "We've sent an OTP to your phone",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = modifier.height(24.dp))
+
+                OutlinedTextField(
+                    value = otp,
+                    onValueChange = {
+                        otp = it
+                        errorMessage = null
+                    },
+                    label = { Text("OTP") },
+                    modifier = modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    isError = errorMessage != null
+                )
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = modifier.padding(top = 4.dp)
+                    )
+                }
+                Spacer(modifier = modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        if (otp.isBlank()) {
+                            errorMessage = "Please Enter OTP"
+                            return@Button
+                        }
+                        onSubmit(otp)
+                    },
+                    modifier = modifier.fillMaxWidth()
+                ) {
+                    Text("Verify")
                 }
             }
         }

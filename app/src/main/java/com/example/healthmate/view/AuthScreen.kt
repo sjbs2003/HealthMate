@@ -1,4 +1,4 @@
-package com.example.healthmate.ui.view
+package com.example.healthmate.view
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image

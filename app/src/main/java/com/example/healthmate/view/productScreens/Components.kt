@@ -97,7 +97,7 @@ fun ProductCard(
 }
 
 @Composable
-fun SortingBar(
+fun Sorting(
     modifier: Modifier = Modifier,
     onSortChange: (String, String) -> Unit
 ) {

@@ -150,7 +150,7 @@ class ProductViewModel @Inject constructor(
         }
     }
 
-    private fun sortProducts(order: String?, type: String?) {
+    fun sortProducts(order: String?, type: String?) {
         viewModelScope.launch {
             _uiState.value = ProductUiState.Loading
             try {

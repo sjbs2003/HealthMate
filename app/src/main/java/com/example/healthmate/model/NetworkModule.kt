@@ -26,7 +26,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(json: Json): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://localhost:3001/")
+            .baseUrl("http://10.0.2.2:3001/")
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
     }

@@ -116,8 +116,8 @@ class Repository @Inject constructor(
 
     suspend fun login(phone: String): Result<String> = try {
         val response = apiService.login(LoginRequest(phone))
-        if (response.success && response.token != null) {
-            Result.success(response.token)
+        if (response.success) {
+            Result.success(response.message ?: "Otp sent successfully")
         } else {
             Result.failure(Exception(response.error ?: "Login Failed"))
         }

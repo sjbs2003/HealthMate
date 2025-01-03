@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -22,6 +21,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -35,8 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -61,12 +59,36 @@ fun AuthScreen(
     var showSignInDialog by remember { mutableStateOf(false) }
     var showSignUpDialog by remember { mutableStateOf(false) }
     var showOTPDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     LaunchedEffect(authState) {
         when(authState) {
-            is AuthState.Success -> onLoginSuccess()
-            is AuthState.OtpSent -> showOTPDialog = true
-            else -> {}
+            is AuthState.Success -> {
+                isLoading = false
+                errorMessage = null
+                showOTPDialog = false
+                onLoginSuccess()
+            }
+            is AuthState.OtpSent -> {
+                isLoading = false
+                errorMessage = null
+                showOTPDialog = true
+                showSignInDialog = false
+            }
+            is AuthState.Error -> {
+                isLoading = false
+                errorMessage = (authState as AuthState.Error).message
+            }
+            is AuthState.Loading -> {
+                isLoading = true
+                errorMessage = null
+            }
+
+            AuthState.Initial -> {
+                isLoading = false
+                errorMessage = null
+            }
         }
     }
 
@@ -80,9 +102,7 @@ fun AuthScreen(
     ) {
         Box(
             modifier = modifier
-                .size(120.dp)
-                .clip(RectangleShape)
-                .background(colorScheme.primaryContainer, CircleShape),
+                .size(400.dp),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -91,17 +111,7 @@ fun AuthScreen(
                 modifier = modifier.fillMaxSize()
             )
         }
-
         Spacer(modifier = modifier.height(24.dp))
-
-        Text(
-            text = "HealthMate",
-            style = MaterialTheme.typography.headlineMedium,
-            color = colorScheme.onSurface,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = modifier.height(8.dp))
 
         Text(
             text = "Your personal Health Companion\nManage Your Health Journey",
@@ -157,33 +167,63 @@ fun AuthScreen(
     // SignIn Dialog
     if (showSignInDialog) {
         SignInDialog(
-            onDismiss = { showSignInDialog = false },
-            onSubmit = { phone ->
-                viewModel.login(phone)
+            onDismiss = {
                 showSignInDialog = false
-            }
+                errorMessage = null
+                viewModel.resetAuthState()
+            },
+            onSubmit = { phone ->
+                if (validatePhoneNumber(phone)) {
+                    viewModel.login(phone)
+                } else {
+                    errorMessage = "Please Enter A Valid Number"
+                }
+            },
+            error = errorMessage,
+            isLoading = isLoading
         )
     }
 
     // SignUp Dialog
     if (showSignUpDialog) {
         SignUpDialog(
-            onDismiss = { showSignUpDialog = false },
-            onSubmit = { name, phone, email ->
-                viewModel.signUp(name, phone, email)
+            onDismiss = {
                 showSignUpDialog = false
-            }
+                errorMessage = null
+                viewModel.resetAuthState()
+            },
+            onSubmit = { name, phone, email ->
+                when {
+                    name.length < 2 -> errorMessage = "Name must be at least 2 characters"
+                    !validatePhoneNumber(phone) -> errorMessage = "Please enter a valid phone number"
+                    email != null && !validateEmail(email) -> errorMessage = "Please enter a valid email or leave it empty"
+                    else -> {
+                        viewModel.signUp(name, phone, email)
+                    }
+                }
+            },
+            error = errorMessage,
+            isLoading = isLoading
         )
     }
 
     // OTP Dialog
     if (showOTPDialog) {
         OTPDialog(
-            onDismiss = { showOTPDialog = false },
-            onSubmit = { otp ->
-                viewModel.verifyOTP(otp)
+            onDismiss = {
                 showOTPDialog = false
-            }
+                errorMessage = null
+                viewModel.resetAuthState()
+            },
+            onSubmit = { otp ->
+                if (validateOTP(otp)) {
+                    viewModel.verifyOTP(otp)
+                } else {
+                    errorMessage = "Please enter a valid OTP"
+                }
+            },
+            error = errorMessage,
+            isLoading = isLoading
         )
     }
 }
@@ -193,10 +233,11 @@ fun AuthScreen(
 fun SignInDialog(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
-    onSubmit: (String) -> Unit
+    onSubmit: (String) -> Unit,
+    error: String? = null,
+    isLoading: Boolean = false
 ) {
     var phone by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -212,7 +253,7 @@ fun SignInDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Name",
+                    text = "Sign In",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -221,10 +262,7 @@ fun SignInDialog(
 
                 OutlinedTextField(
                     value = phone,
-                    onValueChange = {
-                        phone = it
-                        errorMessage = null
-                    },
+                    onValueChange = { phone = it },
                     label = { Text("Phone number") },
                     modifier = modifier.fillMaxWidth(),
                     leadingIcon = {
@@ -235,31 +273,17 @@ fun SignInDialog(
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
-                    isError = errorMessage != null
+                    isError = error != null
                 )
-
-                if (errorMessage != null) {
-                    Text(
-                        text = errorMessage!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = modifier.padding(top = 4.dp)
-                    )
-                }
+                ErrorText(error = error, modifier = modifier)
                 Spacer(modifier = modifier.height(24.dp))
-
-                Button(
-                    onClick = {
-                        if (phone.isBlank()) {
-                            errorMessage = "Please Enter A Valid Number"
-                            return@Button
-                        }
-                        onSubmit(phone)
-                    },
+                LoadingButton(
+                    onClick = { onSubmit(phone) },
+                    enabled = phone.isNotBlank(),
+                    isLoading = isLoading,
+                    text = "Continue",
                     modifier = modifier.fillMaxWidth()
-                ) {
-                    Text("Continue")
-                }
+                )
             }
         }
     }
@@ -269,12 +293,13 @@ fun SignInDialog(
 fun SignUpDialog(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
-    onSubmit: (String, String, String?) -> Unit
+    onSubmit: (String, String, String?) -> Unit,
+    error: String? = null,
+    isLoading: Boolean = false
 ) {
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -299,10 +324,7 @@ fun SignUpDialog(
 
                 OutlinedTextField(
                     value = name,
-                    onValueChange = {
-                        name = it
-                        errorMessage = null
-                    },
+                    onValueChange = { name = it },
                     label = { Text("Name") },
                     modifier = modifier.fillMaxWidth(),
                     leadingIcon = {
@@ -312,16 +334,13 @@ fun SignUpDialog(
                         )
                     },
                     singleLine = true,
-                    isError = errorMessage != null
+                    isError = error != null
                 )
                 Spacer(modifier = modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = phone,
-                    onValueChange = {
-                        phone = it
-                        errorMessage = null
-                    },
+                    onValueChange = { phone = it },
                     label = { Text("Phone number") },
                     leadingIcon = {
                         Icon(
@@ -332,16 +351,13 @@ fun SignUpDialog(
                     modifier = modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
-                    isError = errorMessage != null
+                    isError = error != null
                 )
                 Spacer(modifier = modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = email,
-                    onValueChange = {
-                        email = it
-                        errorMessage = null
-                    },
+                    onValueChange = { email = it },
                     label = { Text("Email Id") },
                     leadingIcon = {
                         Icon(
@@ -353,29 +369,15 @@ fun SignUpDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     singleLine = true
                 )
-
-                if (errorMessage != null) {
-                    Text(
-                        text = errorMessage!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = modifier.padding(top = 4.dp)
-                    )
-                }
+                ErrorText(error = error, modifier = modifier)
                 Spacer(modifier = modifier.height(24.dp))
-
-                Button(
-                    onClick = {
-                        if (name.isBlank() || phone.isBlank()) {
-                            errorMessage = "Please fill required fields correctly!"
-                            return@Button
-                        }
-                        onSubmit(name, phone, email.takeIf { it.isNotBlank() })
-                    },
+                LoadingButton(
+                    onClick = { onSubmit(name, phone, email.takeIf { it.isNotBlank() }) },
+                    enabled = name.isNotBlank() && phone.isNotBlank(),
+                    isLoading = isLoading,
+                    text = "SignUp",
                     modifier = modifier.fillMaxWidth()
-                ) {
-                    Text("SignUp")
-                }
+                )
             }
         }
     }
@@ -386,10 +388,11 @@ fun SignUpDialog(
 fun OTPDialog(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
-    onSubmit: (String) -> Unit
+    onSubmit: (String) -> Unit,
+    error: String? = null,
+    isLoading: Boolean = false
 ) {
     var otp by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -421,40 +424,81 @@ fun OTPDialog(
 
                 OutlinedTextField(
                     value = otp,
-                    onValueChange = {
-                        otp = it
-                        errorMessage = null
-                    },
+                    onValueChange = { otp = it },
                     label = { Text("OTP") },
                     modifier = modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
-                    isError = errorMessage != null
+                    isError = error != null,
+                    enabled = !isLoading
+
                 )
-
-                if (errorMessage != null) {
-                    Text(
-                        text = errorMessage!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = modifier.padding(top = 4.dp)
-                    )
-                }
+                ErrorText(error = error, modifier = modifier)
                 Spacer(modifier = modifier.height(24.dp))
-
-                Button(
+                LoadingButton(
                     onClick = {
-                        if (otp.isBlank()) {
-                            errorMessage = "Please Enter OTP"
-                            return@Button
-                        }
+                        if (otp.isBlank()) return@LoadingButton
                         onSubmit(otp)
                     },
+                    enabled = otp.isNotBlank(),
+                    isLoading = isLoading,
+                    text = "Verify",
                     modifier = modifier.fillMaxWidth()
-                ) {
-                    Text("Verify")
-                }
+                )
             }
         }
+    }
+}
+
+
+private fun validatePhoneNumber(phone: String): Boolean {
+    return phone.length >= 10 && phone.all { it.isDigit() }
+}
+
+private fun validateEmail(email: String): Boolean {
+    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
+
+private fun validateOTP(otp: String): Boolean {
+    return otp.length == 4 && otp.all { it.isDigit() }  // Assuming 4-digit OTP
+}
+
+@Composable
+private fun LoadingButton(
+    onClick: () -> Unit,
+    enabled: Boolean,
+    isLoading: Boolean,
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled && !isLoading,
+        modifier = modifier
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = MaterialTheme.colorScheme.onPrimary,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(text)
+        }
+    }
+}
+
+@Composable
+private fun ErrorText(
+    error: String?,
+    modifier: Modifier = Modifier
+) {
+    if (error != null) {
+        Text(
+            text = error,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = modifier.padding(top = 4.dp)
+        )
     }
 }

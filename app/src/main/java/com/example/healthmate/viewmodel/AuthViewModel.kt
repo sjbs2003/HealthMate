@@ -79,7 +79,12 @@ class AuthViewModel @Inject constructor(
                         )
                     },
                     onFailure = { exception ->
-                        _authState.value = AuthState.Error(exception.message ?: "Login Error")
+                        // Here we'll get the specific error messages from backend
+                        when (exception.message) {
+                            "Phone is required" -> _authState.value = AuthState.Error("Please enter phone number")
+                            "User not found." -> _authState.value = AuthState.Error("No account found with this number")
+                            else -> _authState.value = AuthState.Error(exception.message ?: "Login Error")
+                        }
                     }
                 )
             } catch (e: Exception) {

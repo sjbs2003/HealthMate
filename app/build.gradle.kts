@@ -2,17 +2,19 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    id("com.google.devtools.ksp") version "1.9.22-1.0.16"
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
 }
 
 android {
     namespace = "com.example.healthmate"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.healthmate"
         minSdk = 27
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -32,11 +34,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -48,6 +50,9 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+    kapt {
+        correctErrorTypes = false
     }
 }
 
@@ -79,8 +84,12 @@ dependencies {
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.48")
-    ksp("com.google.dagger:hilt-android-compiler:2.48")
+    kapt("com.google.dagger:hilt-android-compiler:2.48")
 
     // If you want to use Hilt with Navigation Component
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 }
+
+
+
+

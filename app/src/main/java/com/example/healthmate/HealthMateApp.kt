@@ -2,6 +2,7 @@ package com.example.healthmate
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -27,8 +28,8 @@ enum class Screens(val route: String){
 @Composable
 fun HealthMateApp() {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = viewModel()
-    val productViewModel: ProductViewModel = viewModel()
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val productViewModel: ProductViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,

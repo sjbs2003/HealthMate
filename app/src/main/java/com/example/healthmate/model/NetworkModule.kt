@@ -17,10 +17,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideBaseUrl(): String = "http://localhost:3001/"
-
-    @Provides
-    @Singleton
     fun provideJson(): Json = Json {
         ignoreUnknownKeys = true
         coerceInputValues = true
@@ -28,10 +24,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(baseUrl: String, json: Json): Retrofit {
+    fun provideRetrofit(json: Json): Retrofit {
         return Retrofit.Builder()
+            .baseUrl("http://localhost:3001/")
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-            .baseUrl(baseUrl)
             .build()
     }
 

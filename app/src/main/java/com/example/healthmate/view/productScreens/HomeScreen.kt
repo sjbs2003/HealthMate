@@ -17,7 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.healthmate.viewmodel.ProductUiState
 import com.example.healthmate.viewmodel.ProductViewModel
 
@@ -27,7 +27,7 @@ fun HomeScreen(
     onProductClick: (String) -> Unit,
     onCategoryClick: (String) -> Unit,
     onBrandClick: (String) -> Unit,
-    viewModel: ProductViewModel = viewModel()
+    viewModel: ProductViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()

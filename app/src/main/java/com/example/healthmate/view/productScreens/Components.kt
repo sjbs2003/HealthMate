@@ -165,7 +165,7 @@ fun SearchBar(
         onValueChange = onQueryChange,
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 18.dp),
+            .padding(top = 28.dp),
         placeholder = {
             Text("Search Products")
             colorScheme.onSurface.copy(alpha = 0.6f)

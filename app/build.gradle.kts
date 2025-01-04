@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.security.crypto.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -88,6 +89,9 @@ dependencies {
 
     // If you want to use Hilt with Navigation Component
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
+    // MasterKey
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }
 
 

@@ -2,6 +2,8 @@ package com.example.healthmate
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -29,10 +31,20 @@ fun HealthMateApp() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = hiltViewModel()
     val productViewModel: ProductViewModel = hiltViewModel()
+    val authState by authViewModel.authState.collectAsState()
+    val uiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.isLoggedIn) {
+        if (uiState.isLoggedIn) {
+            navController.navigate(Screens.Home.route) {
+                popUpTo(Screens.Auth.route) { inclusive = true }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
-        startDestination = Screens.Auth.route
+        startDestination = if (uiState.isLoggedIn) Screens.Home.route else Screens.Auth.route
     ) {
         composable(route = Screens.Auth.route) {
             AuthScreen(

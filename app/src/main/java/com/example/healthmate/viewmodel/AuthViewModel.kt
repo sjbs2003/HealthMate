@@ -2,6 +2,7 @@ package com.example.healthmate.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.healthmate.model.AuthManager
 import com.example.healthmate.model.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,8 @@ data class AuthUiState(
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val repository: Repository
+    private val repository: Repository,
+    private val authManager: AuthManager
 ): ViewModel() {
 
     // UI States
@@ -37,6 +39,18 @@ class AuthViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    init {
+        // check for existing auth token
+        if (authManager.isUserLoggedIn()) {
+            val token = authManager.getAuthToken()
+            _authState.value = AuthState.Success(token!!)
+            _uiState.value = _uiState.value.copy(
+                isLoggedIn = true,
+                userToken = token
+            )
+        }
+    }
 
 
     //Handle SignUp
@@ -47,6 +61,7 @@ class AuthViewModel @Inject constructor(
                 val result = repository.signup(name, phone, email)
                 result.fold(
                     onSuccess = { token ->
+                        authManager.saveAuthToken(token)
                         _authState.value = AuthState.Success(token)
                         // update ui state
                         _uiState.value = _uiState.value.copy(
@@ -103,10 +118,10 @@ class AuthViewModel @Inject constructor(
                     _authState.value = AuthState.Error("Phone number not found!!")
                     return@launch
                 }
-
                 val result = repository.verifyOTP(phone, otp)
                 result.fold(
                     onSuccess = { token ->
+                        authManager.saveAuthToken(token)
                         _authState.value = AuthState.Success(token)
                         // update ui state
                         _uiState.value = _uiState.value.copy(
@@ -136,6 +151,7 @@ class AuthViewModel @Inject constructor(
 
     // Logout
     fun logout() {
+        authManager.clearAuthToken()
         _uiState.value = AuthUiState()
         _authState.value = AuthState.Initial
     }

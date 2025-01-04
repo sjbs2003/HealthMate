@@ -19,8 +19,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -157,13 +160,24 @@ fun SearchBar(
     onSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    OutlinedTextField(
+    TextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        placeholder = { Text("Search Products") },
+            .padding(top = 18.dp),
+        placeholder = {
+            Text("Search Products")
+            colorScheme.onSurface.copy(alpha = 0.6f)
+        },
+        colors = TextFieldDefaults.colors(
+            focusedTextColor = colorScheme.onSurface,
+            unfocusedTextColor = colorScheme.onSurface,
+            focusedContainerColor = colorScheme.surface,
+            unfocusedContainerColor = colorScheme.surface,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        ),
         trailingIcon = {
             IconButton(
                 onClick = onSearch,

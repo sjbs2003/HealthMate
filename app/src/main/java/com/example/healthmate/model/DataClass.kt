@@ -3,53 +3,95 @@ package com.example.healthmate.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Serializable
 enum class ProductType {
+    @SerialName("capsule")
     CAPSULE,
+    @SerialName("tablet")
     TABLET,
+    @SerialName("powder")
     POWDER,
+    @SerialName("sachet")
     SACHET,
+    @SerialName("other")
     OTHER
 }
 
+@Serializable
 enum class MedsType {
+    @SerialName("Meds")
     MEDS,
+    @SerialName("Supplement")
     SUPPLEMENT,
+    @SerialName("Cosmetic")
     COSMETIC,
+    @SerialName("Food")
     FOOD
 }
 
+@Serializable
 enum class OrderStatus {
+    @SerialName("pending")
     PENDING,
+    @SerialName("completed")
     COMPLETED,
+    @SerialName("canceled")
     CANCELED,
+    @SerialName("refunded")
     REFUNDED
 }
 
+@Serializable
 enum class Category {
+    @SerialName("Hair_Care")
     HAIR_CARE,
+    @SerialName("Oral_Care")
     ORAL_CARE,
+    @SerialName("Sexual_Wellness")
     SEXUAL_WELLNESS,
+    @SerialName("Skin_Care")
     SKIN_CARE,
+    @SerialName("Feminine_Care")
     FEMININE_CARE,
+    @SerialName("Baby_Care")
     BABY_CARE,
+    @SerialName("Elderly_Care")
     ELDERLY_CARE,
+    @SerialName("Men_Grooming")
     MEN_GROOMING,
+    @SerialName("Vitamin_And_Nutrition")
     VITAMIN_AND_NUTRITION,
+    @SerialName("Fitness_Supplements")
     FITNESS_SUPPLEMENTS,
+    @SerialName("Nutritional_Drinks")
     NUTRITIONAL_DRINKS,
+    @SerialName("Healthy_Snacks")
     HEALTHY_SNACKS,
+    @SerialName("Herbal_Juice")
     HERBAL_JUICE,
+    @SerialName("Monitoring_Devices")
     MONITORING_DEVICES,
+    @SerialName("Rehydration_Beverages")
     REHYDRATION_BEVERAGES,
+    @SerialName("Immunity_Boosters")
     IMMUNITY_BOOSTERS,
+    @SerialName("Medicine")
     MEDICINE,
+    @SerialName("Stomach_Care")
     STOMACH_CARE,
+    @SerialName("Cold_And_Cough")
     COLD_AND_COUGH,
+    @SerialName("Pain_Relief")
     PAIN_RELIEF,
+    @SerialName("First_Aid")
     FIRST_AID,
+    @SerialName("Diabetes")
     DIABETES,
+    @SerialName("Eye_And_Ear_Care")
     EYE_AND_EAR_CARE,
+    @SerialName("Skin_Infection")
     SKIN_INFECTION,
+    @SerialName("Supports_And_Braces")
     SUPPORTS_AND_BRACES
 }
 

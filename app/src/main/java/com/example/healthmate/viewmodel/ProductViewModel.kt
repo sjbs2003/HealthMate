@@ -46,22 +46,38 @@ class ProductViewModel @Inject constructor(
     private fun loadInitialData() {
         viewModelScope.launch {
             try {
-                // Load Brands, Products, Categories concurrently
-                val productResult = repository.getAllProducts()
-                val categoryResult = repository.getAllCategories()
-                val brandResult = repository.getAllBrands()
+                _uiState.value = ProductUiState.Loading
+                println("Loading initial data...")  // Debug log
 
-                // check if all requests are successful
+                val productResult = repository.getAllProducts()
+                println("Products result: $productResult")  // Debug log
+
+                val categoryResult = repository.getAllCategories()
+                println("Categories result: $categoryResult")  // Debug log
+
+                val brandResult = repository.getAllBrands()
+                println("Brands result: $brandResult")  // Debug log
+
                 if (productResult.isSuccess && categoryResult.isSuccess && brandResult.isSuccess) {
+                    val products = productResult.getOrNull() ?: emptyList()
+                    println("Products size: ${products.size}")  // Debug log
+
                     _uiState.value = ProductUiState.Success(
-                        products = productResult.getOrNull() ?: emptyList(),
+                        products = products,
                         categories = categoryResult.getOrNull() ?: emptyList(),
                         brands = brandResult.getOrNull() ?: emptyList()
                     )
                 } else {
+                    // Log the specific failures
+                    if (!productResult.isSuccess) println("Product fetch failed: ${productResult.exceptionOrNull()?.message}")
+                    if (!categoryResult.isSuccess) println("Category fetch failed: ${categoryResult.exceptionOrNull()?.message}")
+                    if (!brandResult.isSuccess) println("Brand fetch failed: ${brandResult.exceptionOrNull()?.message}")
+
                     _uiState.value = ProductUiState.Error("Failed To Load Initial Data!")
                 }
-            } catch (e:Exception) {
+            } catch (e: Exception) {
+                println("Exception in loadInitialData: ${e.message}")  // Debug log
+                e.printStackTrace()
                 _uiState.value = ProductUiState.Error(e.message ?: "Unknown error occurred!")
             }
         }

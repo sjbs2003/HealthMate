@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -12,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -32,8 +34,12 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
 
-    Column(modifier = modifier.fillMaxSize()) {
+    // Debug log
+    LaunchedEffect(Unit) {
+        println("HomeScreen composed with state: $uiState")
+    }
 
+    Column(modifier = modifier.fillMaxSize()) {
         SearchBar(
             query = searchQuery,
             onQueryChange = { viewModel.updateSearchQuery(it) },
@@ -52,7 +58,13 @@ fun HomeScreen(
                 Box(
                     modifier = modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
-                ) { CircularProgressIndicator() }
+                ) {
+                    CircularProgressIndicator()
+                    Text(
+                        text = "Loading...",
+                        modifier = modifier.padding(top = 8.dp)
+                    )
+                }
             }
 
             is ProductUiState.Success -> {

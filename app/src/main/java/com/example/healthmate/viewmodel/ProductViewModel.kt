@@ -83,6 +83,21 @@ class ProductViewModel @Inject constructor(
         }
     }
 
+    fun loadProductById(id: String) {
+        viewModelScope.launch {
+            try {
+                val result = repository.getProduct(id)
+                if(result.isSuccess) {
+                    _selectedProduct.value = result.getOrNull()?.firstOrNull()
+                } else {
+                    _uiState.value = ProductUiState.Error("Failed to load product details")
+                }
+            } catch (e: Exception) {
+                _uiState.value = ProductUiState.Error(e.message ?: "Failed to load product details")
+            }
+        }
+    }
+
     fun refreshData() {
         loadInitialData()
     }

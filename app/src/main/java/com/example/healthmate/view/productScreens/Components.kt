@@ -1,25 +1,36 @@
 package com.example.healthmate.view.productScreens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -36,67 +47,45 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.healthmate.R
+import com.example.healthmate.model.CategoryItem
 import com.example.healthmate.model.Product
 
 @Composable
-fun ProductCard(
+fun TopBar(
     modifier: Modifier = Modifier,
-    product: Product,
-    onClick: () -> Unit
+    onSearchClick: () -> Unit,
+    onCartClick: () -> Unit
 ) {
-   Card(
-       modifier = modifier
-           .fillMaxWidth()
-           .clickable(onClick = onClick)
-           .padding(8.dp),
-       shape = RoundedCornerShape(12.dp),
-       elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-   ) {
-       Column {
-           AsyncImage(
-               model = ImageRequest.Builder(context = LocalContext.current)
-                   .data(product.imageLinks.firstOrNull())
-                   .crossfade(true)
-                   .build(),
-               contentDescription = product.name,
-               error = painterResource(R.drawable.ic_broken_image),
-               placeholder = painterResource(R.drawable.loading_img),
-               modifier = Modifier
-                   .fillMaxWidth()
-                   .height(160.dp)
-                   .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
-               contentScale = ContentScale.Crop
-           )
-           Column(modifier = modifier.padding(12.dp)) {
-               Text(
-                   text = product.name,
-                   style = MaterialTheme.typography.titleMedium,
-                   maxLines = 2,
-                   overflow = TextOverflow.Ellipsis
-               )
-               Spacer(modifier = modifier.height(4.dp))
-
-               Text(
-                   text = "${product.price}",
-                   style = MaterialTheme.typography.titleLarge,
-                   fontWeight = FontWeight.Bold,
-                   color = MaterialTheme.colorScheme.primary
-               )
-               Spacer(modifier = modifier.height(4.dp))
-
-               Text(
-                   text = product.brand,
-                   style = MaterialTheme.typography.bodyMedium,
-                   color = MaterialTheme.colorScheme.onSurfaceVariant
-               )
-           }
-       }
-   }
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onSearchClick) {
+                Icon(Icons.Default.Search,"Search")
+            }
+            Text(
+                text = "HealthMate",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(onClick = onCartClick) {
+                Icon(Icons.Default.ShoppingCart, "Cart")
+            }
+        }
+    }
 }
 
 @Composable
@@ -157,38 +146,153 @@ fun Sorting(
 fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 28.dp),
-        placeholder = {
-            Text("Search Products")
-            colorScheme.onSurface.copy(alpha = 0.6f)
-        },
-        colors = TextFieldDefaults.colors(
-            focusedTextColor = colorScheme.onSurface,
-            unfocusedTextColor = colorScheme.onSurface,
-            focusedContainerColor = colorScheme.surface,
-            unfocusedContainerColor = colorScheme.surface,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        trailingIcon = {
-            IconButton(
-                onClick = onSearch,
-                enabled = query.length >= 3
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
-                )
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        TextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Search Products") },
+            singleLine = true,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = colorScheme.surface,
+                unfocusedContainerColor = colorScheme.surface,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+            trailingIcon = {
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Default.Search, "Search")
+                }
             }
-        },
-        singleLine = true
-    )
+        )
+    }
+}
+
+@Composable
+fun CategoryCircle(
+    category: CategoryItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .width(80.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Card(
+            modifier = Modifier
+                .size(80.dp)
+                .clip(CircleShape),
+            shape = CircleShape
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(category.image)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = category.name,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = category.name.replace("_", " "),
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+
+@Composable
+fun ProductCircle(
+    modifier: Modifier = Modifier,
+    product: Product,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .width(160.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Card(modifier = modifier
+            .size(160.dp)
+            .clip(CircleShape),
+            shape = CircleShape
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(context = LocalContext.current)
+                    .data(product.imageLinks.firstOrNull())
+                    .crossfade(true)
+                    .build(),
+                contentDescription = product.name,
+                error = painterResource(R.drawable.ic_broken_image),
+                placeholder = painterResource(R.drawable.loading_img),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = modifier.height(8.dp))
+
+            Text(
+                text = product.name,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "₹${product.price}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colorScheme.primary
+            )
+        }
+    }
+}
+
+
+@Composable
+fun LoadingIndicator(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun ErrorMessage(
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
 }

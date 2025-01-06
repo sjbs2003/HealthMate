@@ -1,25 +1,30 @@
 package com.example.healthmate.view.productScreens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.healthmate.model.CategoryItem
+import com.example.healthmate.model.Product
 import com.example.healthmate.viewmodel.ProductUiState
 import com.example.healthmate.viewmodel.ProductViewModel
 
@@ -33,68 +38,87 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    var showSearchbar by remember { mutableStateOf(false) }
 
-    // Debug log
-    LaunchedEffect(Unit) {
-        println("HomeScreen composed with state: $uiState")
-    }
-
-    Column(modifier = modifier.fillMaxSize()) {
-        SearchBar(
-            query = searchQuery,
-            onQueryChange = { viewModel.updateSearchQuery(it) },
-            onSearch = {/* happens automatically */}
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        TopBar(
+            onSearchClick = { showSearchbar = !showSearchbar },
+            onCartClick = {}
         )
 
-        Sorting(
-            onSortChange = { order, type ->
-                viewModel.sortProducts(order, type)
-            }
-        )
+        AnimatedVisibility(
+            visible = showSearchbar,
+            enter = fadeIn() + slideInVertically(),
+            exit = fadeOut() + slideOutVertically()
+        ) {
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = { viewModel.updateSearchQuery(it) },
+                onClose = { showSearchbar = false },
+                modifier = modifier.padding(16.dp)
+            )
+        }
 
         // Main Content
         when (val state = uiState) {
-            is ProductUiState.Loading -> {
-                Box(
-                    modifier = modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                    Text(
-                        text = "Loading...",
-                        modifier = modifier.padding(top = 8.dp)
-                    )
-                }
-            }
-
+            is ProductUiState.Loading -> LoadingIndicator()
+            is ProductUiState.Error -> ErrorMessage(state.message)
             is ProductUiState.Success -> {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.products) { product ->
-                        ProductCard(
-                            product = product,
-                            onClick = { onProductClick(product.id) }
-                        )
-                    }
-                }
-            }
+                CategoriesRow(
+                    categories = state.categories,
+                    onCategoryClick = onCategoryClick,
+                    modifier = modifier.padding(vertical = 16.dp)
+                )
 
-            is ProductUiState.Error -> {
-                Box(
-                    modifier = modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = state.message,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
+                ProductsRow(
+                    products = state.products,
+                    onProductClick = onProductClick
+                )
             }
+        }
+    }
+}
+
+@Composable
+fun CategoriesRow(
+    categories: List<CategoryItem>,
+    onCategoryClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyRow(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(categories) { category ->
+            CategoryCircle(
+                category = category,
+                onClick = { onCategoryClick(category.name) }
+            )
+        }
+    }
+}
+
+@Composable
+fun ProductsRow(
+    modifier: Modifier = Modifier,
+    products: List<Product>,
+    onProductClick: (String) -> Unit
+) {
+    LazyRow(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        items(products) { product ->
+            ProductCircle(
+                product = product,
+                onClick = { onProductClick(product.id) }
+            )
         }
     }
 }

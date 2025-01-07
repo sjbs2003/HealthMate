@@ -13,7 +13,7 @@ interface ApiService {
     suspend fun getAllProducts(): ProductResponse
 
     @GET("api/product/{id}")
-    suspend fun getProduct(@Path("id") id: String): ProductResponse
+    suspend fun getProduct(@Path("id") id: String): SingleProductResponse
 
     @GET("api/product/search")
     suspend fun searchProducts(@Query("query") query: String): ProductResponse

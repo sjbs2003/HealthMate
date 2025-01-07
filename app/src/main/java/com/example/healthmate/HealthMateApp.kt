@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.healthmate.view.AuthScreen
 import com.example.healthmate.view.productScreens.CategoryScreen
+import com.example.healthmate.view.productScreens.HomeScreen
 import com.example.healthmate.view.productScreens.ProductScreen
 import com.example.healthmate.viewmodel.AuthViewModel
 import com.example.healthmate.viewmodel.ProductViewModel
@@ -36,7 +37,7 @@ fun HealthMateApp() {
 
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
-            navController.navigate(Screens.Category.route) {
+            navController.navigate(Screens.Home.route) {
                 popUpTo(Screens.Auth.route) { inclusive = true }
             }
         }
@@ -44,7 +45,7 @@ fun HealthMateApp() {
 
     NavHost(
         navController = navController,
-        startDestination = if (uiState.isLoggedIn) Screens.Category.route else Screens.Auth.route
+        startDestination = if (uiState.isLoggedIn) Screens.Home.route else Screens.Auth.route
     ) {
         composable(route = Screens.Auth.route) {
             AuthScreen(
@@ -57,10 +58,13 @@ fun HealthMateApp() {
             )
         }
 
-        composable(route = Screens.Category.route) {
-            CategoryScreen(
+        composable(route = Screens.Home.route) {
+            HomeScreen(
                 onProductClick = { productId ->
                     navController.navigate(Screens.ProductDetail.route.replace("{productId}", productId))
+                },
+                onCategoryClick = { categoryName ->
+                    navController.navigate(Screens.Category.route.replace("{categoryName}", categoryName))
                 }
             )
         }
@@ -77,21 +81,22 @@ fun HealthMateApp() {
             )
         }
 
-//        composable(
-//            route = Screens.Category.route,
-//            arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
-//        ) { navBackStackEntry ->
-//            val categoryName = navBackStackEntry.arguments?.getString("categoryName") ?: return@composable
-//            // load products by its category
-//            LaunchedEffect(categoryName) {
-//                productViewModel.loadByCategory(categoryName)
-//            }
-//            CategoryScreen(
-//                onProductClick = { productId ->
-//                    navController.navigate(Screens.ProductDetail.route.replace("{productId}", productId))
-//                }
-//            )
-//        }
+        composable(
+            route = Screens.Category.route,
+            arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
+        ) { navBackStackEntry ->
+            val categoryName = navBackStackEntry.arguments?.getString("categoryName") ?: return@composable
+            // load products by its category
+            LaunchedEffect(categoryName) {
+                productViewModel.loadByCategory(categoryName)
+            }
+            CategoryScreen(
+                onProductClick = { productId ->
+                    navController.navigate(Screens.ProductDetail.route.replace("{productId}", productId))
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
 
         composable(
             route = Screens.Brand.route,
@@ -105,7 +110,8 @@ fun HealthMateApp() {
             CategoryScreen(
                 onProductClick = { productId ->
                     navController.navigate(Screens.ProductDetail.route.replace("{productId}", productId))
-                }
+                },
+                onBackClick = { navController.popBackStack() }
             )
         }
     }

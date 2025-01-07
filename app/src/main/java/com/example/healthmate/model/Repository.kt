@@ -27,18 +27,14 @@ class Repository @Inject constructor(
         val response = apiService.getProduct(id)
         if (response.success && response.data != null) {
             // Since we're expecting a single product, take first item
-            val product = response.data.firstOrNull()
-            if (product != null) {
-                Result.success(product)
-            } else {
-                Result.failure(Exception("Product not found"))
-            }
+                Result.success(response.data)
         } else {
             Result.failure(Exception(response.message ?: "Unknown error occurred"))
         }
     } catch (e: Exception) {
         Result.failure(e)
     }
+
 
     suspend fun searchProducts(query: String): Result<List<Product>> = try {
         val response = apiService.searchProducts(query)

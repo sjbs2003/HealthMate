@@ -57,6 +57,7 @@ import com.example.healthmate.viewmodel.ProductViewModel
 fun CategoryScreen(
     modifier: Modifier = Modifier,
     onProductClick: (String) -> Unit,
+    onBackClick: () -> Unit,
     viewModel: ProductViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -224,7 +225,7 @@ fun ProductsRow(
         horizontalArrangement = Arrangement.spacedBy(40.dp)
     ) {
         items(products) { product ->
-            ProductCard(
+            ProductCircle(
                 product = product,
                 onClick = { onProductClick(product.id) }
             )
@@ -233,7 +234,7 @@ fun ProductsRow(
 }
 
 @Composable
-fun ProductCard(
+fun ProductCircle(
     modifier: Modifier = Modifier,
     product: Product,
     onClick: () -> Unit

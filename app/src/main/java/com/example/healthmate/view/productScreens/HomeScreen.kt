@@ -103,7 +103,7 @@ fun HomeScreen(
                         // Products Section
                         Spacer(modifier = modifier.height(24.dp))
                         Text(
-                            text = "products",
+                            text = "Products",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = modifier.padding(horizontal = 16.dp)

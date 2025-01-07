@@ -118,6 +118,13 @@ data class ProductResponse(
 )
 
 @Serializable
+data class SingleProductResponse(
+    val success: Boolean,
+    val data: Product? = null,
+    val message: String? = null
+)
+
+@Serializable
 data class CategoryItem(
     val id: Int,
     val name: String,

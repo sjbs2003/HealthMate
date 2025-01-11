@@ -89,6 +89,8 @@ fun AuthScreen(
                 isLoading = false
                 errorMessage = null
             }
+
+            else -> {}
         }
     }
 

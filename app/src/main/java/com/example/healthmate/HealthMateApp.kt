@@ -15,6 +15,7 @@ import com.example.healthmate.view.AuthScreen
 import com.example.healthmate.view.productScreens.CategoryScreen
 import com.example.healthmate.view.productScreens.HomeScreen
 import com.example.healthmate.view.productScreens.ProductScreen
+import com.example.healthmate.viewmodel.AuthState
 import com.example.healthmate.viewmodel.AuthViewModel
 import com.example.healthmate.viewmodel.ProductViewModel
 
@@ -36,11 +37,21 @@ fun HealthMateApp() {
     val authState by authViewModel.authState.collectAsState()
     val uiState by authViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) {
-            navController.navigate(Screens.Home.route) {
-                popUpTo(Screens.Auth.route) { inclusive = true }
+    LaunchedEffect(uiState.isLoggedIn, authState) {
+        when(authState) {
+            is AuthState.LoggedOut -> {
+                navController.navigate(Screens.Auth.route) {
+                    popUpTo(0) { inclusive = true } // Clear entire back stack
+                }
             }
+            is AuthState.Success -> {
+                if (uiState.isLoggedIn) {
+                    navController.navigate(Screens.Home.route) {
+                        popUpTo(Screens.Auth.route) { inclusive = true }
+                    }
+                }
+            }
+            else -> {}
         }
     }
 
@@ -51,7 +62,7 @@ fun HealthMateApp() {
         composable(route = Screens.Auth.route) {
             AuthScreen(
                 onLoginSuccess = {
-                    navController.navigate(Screens.Category.route) {
+                    navController.navigate(Screens.Home.route) {
                         // Clear the back stack so user can't go back to auth screen
                         popUpTo(Screens.Auth.route) { inclusive = true }
                     }

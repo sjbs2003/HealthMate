@@ -84,13 +84,18 @@ fun AuthScreen(
                 isLoading = true
                 errorMessage = null
             }
-
+            AuthState.LoggedOut -> {
+                isLoading = false
+                errorMessage = null
+                showSignInDialog = false
+                showSignUpDialog = false
+                showOTPDialog = false
+                viewModel.resetAuthState() // Reset to initial state after handling logout
+            }
             AuthState.Initial -> {
                 isLoading = false
                 errorMessage = null
             }
-
-            else -> {}
         }
     }
 

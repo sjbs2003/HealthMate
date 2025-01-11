@@ -17,6 +17,7 @@ sealed class AuthState {
     object Initial : AuthState()
     object Loading : AuthState()
     object OtpSent : AuthState()
+    object LoggedOut : AuthState()
     data class Success(val token: String) : AuthState()
     data class Error(val message: String) : AuthState()
 }
@@ -153,6 +154,6 @@ class AuthViewModel @Inject constructor(
     fun logout() {
         authManager.clearAuthToken()
         _uiState.value = AuthUiState()
-        _authState.value = AuthState.Initial
+        _authState.value = AuthState.LoggedOut
     }
 }

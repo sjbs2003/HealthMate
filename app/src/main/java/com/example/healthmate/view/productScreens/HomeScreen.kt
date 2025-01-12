@@ -59,7 +59,9 @@ fun HomeScreen(
     authViewModel: AuthViewModel= hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
     var showSearchBar by remember { mutableStateOf(false) }
+    val isSearchActive = searchQuery.isNotEmpty()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -142,9 +144,12 @@ fun HomeScreen(
                     exit = fadeOut() + slideOutVertically()
                 ) {
                     SearchBar(
-                        query = viewModel.searchQuery.collectAsState().value,
+                        query = searchQuery,
                         onQueryChange = { viewModel.updateSearchQuery(it) },
-                        onClose = { showSearchBar = false },
+                        onClose = {
+                            showSearchBar = false
+                            viewModel.clearSearchQuery()
+                        },
                         modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                     )
                 }
@@ -154,44 +159,54 @@ fun HomeScreen(
                     is ProductUiState.Error -> ErrorMessage(state.message)
                     is ProductUiState.Loading -> LoadingIndicator()
                     is ProductUiState.Success -> {
-                        Column {
-                            // Categories Section
+                        if (isSearchActive) {
+                            // Show only products when searching
                             Spacer(modifier = modifier.height(16.dp))
-                            Text(
-                                text = "Categories",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                modifier = modifier.padding(horizontal = 16.dp)
-                            )
-                            Spacer(modifier = modifier.height(8.dp))
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                items(state.categories) { category ->
-                                    CategoryCircle(
-                                        category = category,
-                                        isSelected = false,
-                                        onClick = { onCategoryClick(category.name) }
-                                    )
-                                }
-                            }
-
-                            // Products Section
-                            Spacer(modifier = modifier.height(24.dp))
-                            Text(
-                                text = "Products",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = modifier.padding(horizontal = 16.dp)
-                            )
-                            Spacer(modifier = modifier.height(16.dp))
-
                             ProductGrid(
                                 products = state.products,
                                 onProductClick = onProductClick,
-                                onAddToCart = {}
+                                onAddToCart = { /* Handle add to cart */ }
                             )
+                        } else {
+                            Column {
+                                // Categories Section
+                                Spacer(modifier = modifier.height(16.dp))
+                                Text(
+                                    text = "Categories",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = modifier.padding(horizontal = 16.dp)
+                                )
+                                Spacer(modifier = modifier.height(8.dp))
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    items(state.categories) { category ->
+                                        CategoryCircle(
+                                            category = category,
+                                            isSelected = false,
+                                            onClick = { onCategoryClick(category.name) }
+                                        )
+                                    }
+                                }
+
+                                // Products Section
+                                Spacer(modifier = modifier.height(24.dp))
+                                Text(
+                                    text = "Products",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = modifier.padding(horizontal = 16.dp)
+                                )
+                                Spacer(modifier = modifier.height(16.dp))
+
+                                ProductGrid(
+                                    products = state.products,
+                                    onProductClick = onProductClick,
+                                    onAddToCart = {}
+                                )
+                            }
                         }
                     }
                 }

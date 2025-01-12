@@ -24,14 +24,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +55,9 @@ import com.example.healthmate.model.CategoryItem
 import com.example.healthmate.model.Product
 import com.example.healthmate.viewmodel.ProductUiState
 import com.example.healthmate.viewmodel.ProductViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 
 @Composable
 fun CategoryScreen(
@@ -62,6 +68,8 @@ fun CategoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
     var showSearchbar by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
@@ -72,8 +80,8 @@ fun CategoryScreen(
             .padding(top = 24.dp)
     ) {
         TopBar(
+            onMenuClick = { scope.launch { drawerState.open() } },
             onSearchClick = { showSearchbar = !showSearchbar },
-            onCartClick = {}
         )
 
         AnimatedVisibility(

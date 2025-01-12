@@ -246,14 +246,14 @@ fun ProductGridItem(
                         .align(Alignment.BottomEnd)
                         .padding(8.dp)
                         .background(
-                            color = colorScheme.primary,
+                            color = Color.LightGray,
                             shape = CircleShape
                         )
                 ) {
                     Icon(
                         imageVector = Icons.Default.ShoppingCart,
                         contentDescription = "Cart",
-                        tint = Color.White
+                        tint = Color.Black
                     )
                 }
             }

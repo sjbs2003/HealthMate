@@ -130,8 +130,10 @@ fun HomeScreen(
                     .padding(top = 24.dp)
             ) {
                 TopBar(
-                    onSearchClick = { showSearchBar = !showSearchBar },
-                    onCartClick = { TODO("implement cart nav") }
+                    onMenuClick = {
+                        scope.launch { drawerState.open() }
+                    },
+                    onSearchClick = { showSearchBar = !showSearchBar }
                 )
 
                 AnimatedVisibility(
@@ -187,7 +189,8 @@ fun HomeScreen(
 
                             ProductGrid(
                                 products = state.products,
-                                onProductClick = onProductClick
+                                onProductClick = onProductClick,
+                                onAddToCart = {}
                             )
                         }
                     }
@@ -201,6 +204,7 @@ fun HomeScreen(
 fun ProductGrid(
     products: List<Product>,
     onProductClick: (String) -> Unit,
+    onAddToCart: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
@@ -213,7 +217,8 @@ fun ProductGrid(
         items(products) { product ->
             ProductGridItem(
                 product = product,
-                onClick = { onProductClick(product.id) }
+                onClick = { onProductClick(product.id) },
+                onAddToCart = { onAddToCart(product.id) }
             )
         }
     }

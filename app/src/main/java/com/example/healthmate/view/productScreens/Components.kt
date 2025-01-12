@@ -1,5 +1,6 @@
 package com.example.healthmate.view.productScreens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
@@ -52,7 +55,7 @@ import com.example.healthmate.model.Product
 fun TopBar(
     modifier: Modifier = Modifier,
     onSearchClick: () -> Unit,
-    onCartClick: () -> Unit
+    onMenuClick: () -> Unit
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -65,8 +68,8 @@ fun TopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onSearchClick) {
-                Icon(Icons.Default.Search,"Search", tint = Color.White)
+            IconButton(onClick = onMenuClick) {
+                Icon(Icons.Default.Menu,"Menu", tint = Color.White)
             }
             Text(
                 text = "HealthMate",
@@ -74,8 +77,8 @@ fun TopBar(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            IconButton(onClick = onCartClick) {
-                Icon(Icons.Default.ShoppingCart, "Cart", tint =  Color.White)
+            IconButton(onClick = onSearchClick) {
+                Icon(Icons.Default.Search,"Search", tint = Color.White)
             }
         }
     }
@@ -212,7 +215,8 @@ fun ErrorMessage(
 fun ProductGridItem(
     modifier: Modifier = Modifier,
     product: Product,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onAddToCart: () -> Unit
 ) {
     Card(
         modifier = modifier
@@ -221,19 +225,38 @@ fun ProductGridItem(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(product.imageLinks.firstOrNull())
-                    .crossfade(true)
-                    .build(),
-                contentDescription = product.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f),
-                contentScale = ContentScale.Crop,
-                error = painterResource(R.drawable.ic_broken_image),
-                placeholder = painterResource(R.drawable.loading_img)
-            )
+            Box {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(product.imageLinks.firstOrNull())
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = product.name,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(R.drawable.ic_broken_image),
+                    placeholder = painterResource(R.drawable.loading_img)
+                )
+
+                IconButton(
+                    onClick = onAddToCart,
+                    modifier = modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .background(
+                            color = colorScheme.primary,
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = "Cart",
+                        tint = Color.White
+                    )
+                }
+            }
 
             Column(modifier = modifier.padding(12.dp)) {
                 Text(

@@ -6,12 +6,10 @@ import com.example.healthmate.model.Brand
 import com.example.healthmate.model.CategoryItem
 import com.example.healthmate.model.Product
 import com.example.healthmate.model.Repository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 
 sealed class ProductUiState {
@@ -25,8 +23,7 @@ sealed class ProductUiState {
 }
 
 
-@HiltViewModel
-class ProductViewModel @Inject constructor(
+class ProductViewModel (
     private val repository: Repository
 ): ViewModel() {
 

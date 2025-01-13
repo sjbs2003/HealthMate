@@ -9,6 +9,7 @@ import retrofit2.Retrofit
 
 
 val networkModule = module {
+
     single {
         Json {
             ignoreUnknownKeys = true

@@ -1,13 +1,7 @@
 package com.example.healthmate.model
 
-import javax.inject.Inject
-import javax.inject.Singleton
 
-
-//Singleton ->  the dependency injection framework will create only one instance and reuse it everywhere it's needed
-//Inject -> when someone needs this class, here's how to construct it
-@Singleton
-class Repository @Inject constructor(
+class Repository (
     private val apiService: ApiService
 ) {
 

@@ -36,7 +36,6 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -103,59 +102,73 @@ fun CategoryScreen(
             is ProductUiState.Loading -> LoadingIndicator()
             is ProductUiState.Error -> ErrorMessage(state.message)
             is ProductUiState.Success -> {
-                Spacer(modifier = modifier.height(12.dp))
+                Column(
+                    modifier = modifier.fillMaxWidth()
+                ) {
+                    // Categories section
+                    Column(modifier = modifier.padding(start = 16.dp)) {
+                        Text(
+                            text = "Categories",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = modifier.height(12.dp))
 
-                Column(modifier = modifier.padding(start = 16.dp)) {
-                    Text(
-                        text = "Categories",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = modifier.height(12.dp))
+                        // Categories row
+                        LazyRow(
+                            state = rememberLazyListState(),
+                            modifier = modifier.padding(vertical = 16.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(state.categories) { category ->
+                                CategoryCircle(
+                                    category = category,
+                                    isSelected = category.name == selectedCategory,
+                                    onClick = {
+                                        viewModel.loadByCategory(category.name)
+                                    }
+                                )
+                            }
+                        }
+                    }
 
-                    // Categories row with state preservation
-                    val listState = rememberLazyListState()
-                    LazyRow(
-                        state = listState,
-                        modifier = modifier.padding(vertical = 16.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.categories) { category ->
-                            CategoryCircle(
-                                category = category,
-                                isSelected = category.name == selectedCategory,
-                                onClick = {} // we don't want to do anything here
+                    Spacer(modifier = modifier.height(32.dp))
+
+                    // Products section
+                    if (state.products.isNotEmpty()) {
+                        Text(
+                            text = selectedCategory?.replace("_", " ") ?: "All Products",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            modifier = modifier.padding(horizontal = 16.dp)
+                        )
+                        Spacer(modifier = modifier.height(16.dp))
+
+                        Box(
+                            modifier = modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            ProductsRow(
+                                products = state.products,
+                                onProductClick = onProductClick
+                            )
+                        }
+                    } else {
+                        Box(
+                            modifier = modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No products found",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         }
                     }
-                }
-                Spacer(modifier = modifier.height(32.dp))
-                LaunchedEffect(selectedCategory) {
-                    selectedCategory?.let { category ->
-                        // Only load data if we need to
-                        if (state.products.isEmpty()) {
-                            viewModel.loadByCategory(category)
-                        }
-                    }
-                }
-                Box(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    // Filter products to only show products from selected category
-                    val filteredProducts = selectedCategory?.let { selectedCat ->
-                        state.products.filter { product ->
-                            product.categories.any { it.name == selectedCat }
-                        }
-                    } ?: emptyList()
-
-                    ProductsRow(
-                        products = filteredProducts,
-                        onProductClick = onProductClick
-                    )
                 }
             }
         }
@@ -180,7 +193,8 @@ fun CategoryCircle(
             modifier = Modifier
                 .size(80.dp)
                 .clip(CircleShape),
-            shape = CircleShape
+            shape = CircleShape,
+
         ) {
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -231,8 +245,7 @@ fun CategoryCircle(
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            color = if (isSelected) Color(0xFFFF5722) else Color.White
+            textAlign = TextAlign.Center
         )
     }
 }

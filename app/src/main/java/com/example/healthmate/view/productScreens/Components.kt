@@ -47,6 +47,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import com.example.healthmate.R
 import com.example.healthmate.model.Product
@@ -226,7 +229,7 @@ fun ProductGridItem(
     ) {
         Column {
             Box {
-                AsyncImage(
+                SubcomposeAsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(product.imageLinks.firstOrNull())
                         .crossfade(true)
@@ -235,10 +238,41 @@ fun ProductGridItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f),
-                    contentScale = ContentScale.Crop,
-                    error = painterResource(R.drawable.ic_broken_image),
-                    placeholder = painterResource(R.drawable.loading_img)
-                )
+                    contentScale = ContentScale.Crop
+                ){
+                    when (painter.state) {
+                        is AsyncImagePainter.State.Loading -> {
+                            Box(
+                                modifier = modifier
+                                    .fillMaxSize()
+                                    .background(Color(0xFF0A1929)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = Color(0xFF2196F3)
+                                )
+                            }
+                        }
+
+                        is AsyncImagePainter.State.Error -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0xFF0A1929)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Failed to load image",
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+
+                        else -> {
+                            SubcomposeAsyncImageContent()
+                        }
+                    }
+                }
 
                 IconButton(
                     onClick = onAddToCart,

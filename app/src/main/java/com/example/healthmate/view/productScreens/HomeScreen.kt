@@ -186,7 +186,10 @@ fun HomeScreen(
                                         CategoryCircle(
                                             category = category,
                                             isSelected = false,
-                                            onClick = { onCategoryClick(category.name) }
+                                            onClick = {
+                                                viewModel.setSelectedCategoryOnly(category.name)
+                                                onCategoryClick(category.name)
+                                            }
                                         )
                                     }
                                 }

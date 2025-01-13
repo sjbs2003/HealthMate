@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,21 +21,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,19 +48,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
-import com.example.healthmate.R
 import com.example.healthmate.model.CategoryItem
 import com.example.healthmate.model.Product
 import com.example.healthmate.viewmodel.ProductUiState
 import com.example.healthmate.viewmodel.ProductViewModel
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -66,10 +71,8 @@ fun CategoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
     var showSearchbar by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
 
     Column(
         modifier = modifier
@@ -77,8 +80,8 @@ fun CategoryScreen(
             .background(Color.Black)
             .padding(top = 24.dp)
     ) {
-        TopBar(
-            onMenuClick = { scope.launch { drawerState.open() } },
+        CategoryTopBar(
+            onBackClick = onBackClick,
             onSearchClick = { showSearchbar = !showSearchbar },
         )
 
@@ -110,26 +113,47 @@ fun CategoryScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = modifier.height(12.dp))
-                    CategoriesRow(
-                        categories = state.categories,
-                        selectedCategory = selectedCategory,
-                        onCategoryClick = { category ->
-                            selectedCategory = category
-                            viewModel.loadByCategory(category)
-                        },
-                        modifier = modifier.padding(vertical = 16.dp)
-                    )
+
+                    // Categories row with state preservation
+                    val listState = rememberLazyListState()
+                    LazyRow(
+                        state = listState,
+                        modifier = modifier.padding(vertical = 16.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(state.categories) { category ->
+                            CategoryCircle(
+                                category = category,
+                                isSelected = category.name == selectedCategory,
+                                onClick = {} // we don't want to do anything here
+                            )
+                        }
+                    }
                 }
                 Spacer(modifier = modifier.height(32.dp))
-
+                LaunchedEffect(selectedCategory) {
+                    selectedCategory?.let { category ->
+                        // Only load data if we need to
+                        if (state.products.isEmpty()) {
+                            viewModel.loadByCategory(category)
+                        }
+                    }
+                }
                 Box(
                     modifier = modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 ) {
-                    // shows filtered products
+                    // Filter products to only show products from selected category
+                    val filteredProducts = selectedCategory?.let { selectedCat ->
+                        state.products.filter { product ->
+                            product.categories.any { it.name == selectedCat }
+                        }
+                    } ?: emptyList()
+
                     ProductsRow(
-                        products = state.products,
+                        products = filteredProducts,
                         onProductClick = onProductClick
                     )
                 }
@@ -138,27 +162,6 @@ fun CategoryScreen(
     }
 }
 
-@Composable
-fun CategoriesRow(
-    categories: List<CategoryItem>,
-    selectedCategory: String?,
-    onCategoryClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    LazyRow(
-        modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(categories) { category ->
-            CategoryCircle(
-                category = category,
-                isSelected = category.name == selectedCategory,
-                onClick = { onCategoryClick(category.name) }
-            )
-        }
-    }
-}
 
 @Composable
 fun CategoryCircle(
@@ -177,20 +180,48 @@ fun CategoryCircle(
             modifier = Modifier
                 .size(80.dp)
                 .clip(CircleShape),
-            shape = CircleShape,
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            shape = CircleShape
         ) {
-            AsyncImage(
+            SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(category.image)
                     .crossfade(true)
                     .build(),
                 contentDescription = category.name,
                 modifier = Modifier.fillMaxSize(),
-                error = painterResource(R.drawable.ic_broken_image),
-                placeholder = painterResource(R.drawable.loading_img),
                 contentScale = ContentScale.Crop
-            )
+            ) {
+                when(painter.state) {
+                    is AsyncImagePainter.State.Loading -> {
+                        Box(
+                            modifier = modifier
+                                .fillMaxSize()
+                                .background(Color(0xFF0A1929)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = Color(0xFF2196F3)
+                            )
+                        }
+                    }
+                    is AsyncImagePainter.State.Error -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0xFF0A1929)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Failed to load image",
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                    else -> {
+                        SubcomposeAsyncImageContent()
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -200,22 +231,9 @@ fun CategoryCircle(
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = if (isSelected) Color(0xFFFF5722) else Color.White
         )
-
-        // indicator for category selected
-        if (isSelected) {
-            Spacer(modifier = modifier.height(4.dp))
-            Box(
-                modifier = modifier
-                    .width(40.dp)
-                    .height(2.dp)
-                    .background(
-                        color = Color(0xFFFF5722),
-                        shape = RoundedCornerShape(1.dp)
-                    )
-            )
-        }
     }
 }
 
@@ -244,7 +262,7 @@ fun ProductCircle(
     modifier: Modifier = Modifier,
     product: Product,
     onClick: () -> Unit
-)   {
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -257,17 +275,48 @@ fun ProductCircle(
             shape = CircleShape,
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            AsyncImage(
+            SubcomposeAsyncImage(
                 model = ImageRequest.Builder(context = LocalContext.current)
                     .data(product.imageLinks.firstOrNull())
                     .crossfade(true)
                     .build(),
                 contentDescription = product.name,
-                error = painterResource(R.drawable.ic_broken_image),
-                placeholder = painterResource(R.drawable.loading_img),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
-            )
+            ) {
+                when (painter.state) {
+                    is AsyncImagePainter.State.Loading -> {
+                        Box(
+                            modifier = modifier
+                                .fillMaxSize()
+                                .background(Color(0xFF0A1929)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = Color(0xFF2196F3)
+                            )
+                        }
+                    }
+
+                    is AsyncImagePainter.State.Error -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0xFF0A1929)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Failed to load image",
+                                color = Color.Gray
+                            )
+                        }
+                    }
+
+                    else -> {
+                        SubcomposeAsyncImageContent()
+                    }
+                }
+            }
         }
         Spacer(modifier = modifier.height(16.dp))
 
@@ -286,5 +335,38 @@ fun ProductCircle(
             fontWeight = FontWeight.Bold,
             color = colorScheme.primary
         )
+    }
+}
+
+@Composable
+private fun CategoryTopBar(
+    modifier: Modifier = Modifier,
+    onSearchClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = Color.Transparent
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack,"back", tint = Color.White)
+            }
+            Text(
+                text = "HealthMate",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            IconButton(onClick = onSearchClick) {
+                Icon(Icons.Default.Search,"Search", tint = Color.White)
+            }
+        }
     }
 }

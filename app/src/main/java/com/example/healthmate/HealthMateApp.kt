@@ -98,7 +98,7 @@ fun HealthMateApp() {
             arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
         ) { navBackStackEntry ->
             val categoryName = navBackStackEntry.arguments?.getString("categoryName") ?: return@composable
-            // load products by its category
+            // Set the category and load products immediately
             LaunchedEffect(categoryName) {
                 productViewModel.loadByCategory(categoryName)
             }

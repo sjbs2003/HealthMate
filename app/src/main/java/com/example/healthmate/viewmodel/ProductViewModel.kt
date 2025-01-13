@@ -23,15 +23,16 @@ sealed class ProductUiState {
 }
 
 
-class ProductViewModel (
-    private val repository: Repository
-): ViewModel() {
+class ProductViewModel (private val repository: Repository): ViewModel() {
 
     private val _uiState = MutableStateFlow<ProductUiState>(ProductUiState.Loading)
     val uiState: StateFlow<ProductUiState> = _uiState.asStateFlow()
 
     private val _selectedProduct = MutableStateFlow<Product?>(null)
     val selectedProduct: StateFlow<Product?> = _selectedProduct.asStateFlow()
+
+    private val _selectedCategory = MutableStateFlow<String?>(null)
+    val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -145,21 +146,27 @@ class ProductViewModel (
         viewModelScope.launch {
             _uiState.value = ProductUiState.Loading
             try {
-                val result = repository.getProductsByCategory(category)
-                if (result.isSuccess) {
-                    val currentState = _uiState.value
-                    if (currentState is ProductUiState.Success) {
-                        _uiState.value = currentState.copy(products = result.getOrNull() ?: emptyList())
-                    } else {
-                        _uiState.value = ProductUiState.Success(products = result.getOrNull() ?: emptyList())
-                    }
+                val productResult = repository.getProductsByCategory(category)
+                val categoryResult = repository.getAllCategories()
+
+                if (productResult.isSuccess && categoryResult.isSuccess) {
+                    _selectedCategory.value = category // Set the selected category first
+                    _uiState.value = ProductUiState.Success(
+                        products = productResult.getOrNull() ?: emptyList(),
+                        categories = categoryResult.getOrNull() ?: emptyList()
+                    )
                 } else {
-                    _uiState.value = ProductUiState.Error("Failed to load for this category")
+                    _uiState.value = ProductUiState.Error("Failed to load category data")
                 }
             } catch (e: Exception) {
-                _uiState.value = ProductUiState.Error(e.message ?: "Failed to load for this category")
+                _uiState.value = ProductUiState.Error(e.message ?: "Unknown error occurred")
             }
         }
+    }
+
+
+    fun setSelectedCategoryOnly(category: String) {
+        _selectedCategory.value = category
     }
 
     fun loadProductsByBrand(brand: String) {

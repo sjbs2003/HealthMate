@@ -42,17 +42,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.healthmate.R
 import com.example.healthmate.viewmodel.AuthState
 import com.example.healthmate.viewmodel.AuthViewModel
+import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
 fun AuthScreen(
     modifier: Modifier = Modifier,
     onLoginSuccess: () -> Unit,
-    viewModel: AuthViewModel = hiltViewModel()
+    viewModel: AuthViewModel = koinViewModel()
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val authState by viewModel.authState.collectAsState()

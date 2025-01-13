@@ -47,7 +47,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.healthmate.R
@@ -55,16 +54,15 @@ import com.example.healthmate.model.CategoryItem
 import com.example.healthmate.model.Product
 import com.example.healthmate.viewmodel.ProductUiState
 import com.example.healthmate.viewmodel.ProductViewModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlin.coroutines.coroutineContext
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun CategoryScreen(
     modifier: Modifier = Modifier,
     onProductClick: (String) -> Unit,
     onBackClick: () -> Unit,
-    viewModel: ProductViewModel = hiltViewModel()
+    viewModel: ProductViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()

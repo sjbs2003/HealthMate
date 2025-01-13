@@ -43,20 +43,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.healthmate.model.Product
 import com.example.healthmate.viewmodel.AuthViewModel
 import com.example.healthmate.viewmodel.ProductUiState
 import com.example.healthmate.viewmodel.ProductViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onProductClick: (String) -> Unit,
     onCategoryClick: (String) -> Unit,
-    viewModel: ProductViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel= hiltViewModel(),
+    viewModel: ProductViewModel = koinViewModel(),
+    authViewModel: AuthViewModel= koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()

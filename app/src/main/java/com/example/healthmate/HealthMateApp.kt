@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,6 +17,7 @@ import com.example.healthmate.view.productScreens.ProductScreen
 import com.example.healthmate.viewmodel.AuthState
 import com.example.healthmate.viewmodel.AuthViewModel
 import com.example.healthmate.viewmodel.ProductViewModel
+import org.koin.androidx.compose.koinViewModel
 
 
 enum class Screens(val route: String){
@@ -32,8 +32,8 @@ enum class Screens(val route: String){
 @Composable
 fun HealthMateApp() {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = hiltViewModel()
-    val productViewModel: ProductViewModel = hiltViewModel()
+    val authViewModel: AuthViewModel = koinViewModel()
+    val productViewModel: ProductViewModel = koinViewModel()
     val authState by authViewModel.authState.collectAsState()
     val uiState by authViewModel.uiState.collectAsState()
 

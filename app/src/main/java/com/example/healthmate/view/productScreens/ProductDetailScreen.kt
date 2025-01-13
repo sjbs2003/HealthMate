@@ -20,12 +20,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.healthmate.R
 import com.example.healthmate.model.Product
 import com.example.healthmate.viewmodel.ProductViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +34,7 @@ fun ProductScreen(
     productID: String,
     onBackClick: () -> Unit,
     onAddToCart: (Product) -> Unit,
-    viewModel: ProductViewModel = hiltViewModel()
+    viewModel: ProductViewModel = koinViewModel()
 ) {
     val selectedProduct by viewModel.selectedProduct.collectAsState()
 

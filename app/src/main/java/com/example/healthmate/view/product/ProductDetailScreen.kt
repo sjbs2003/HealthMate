@@ -21,10 +21,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import com.example.healthmate.R
-import com.example.healthmate.model.Product
+import com.example.healthmate.viewmodel.CartViewModel
 import com.example.healthmate.viewmodel.ProductViewModel
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,11 +37,19 @@ fun ProductScreen(
     modifier: Modifier = Modifier,
     productID: String,
     onBackClick: () -> Unit,
-    onAddToCart: (Product) -> Unit,
-    viewModel: ProductViewModel = koinViewModel()
+    onCartClick: () -> Unit,
+    viewModel: ProductViewModel = koinViewModel(),
+    cartViewModel: CartViewModel = koinViewModel()
 ) {
     val selectedProduct by viewModel.selectedProduct.collectAsState()
+    var showSnackbar by remember { mutableStateOf(false) }
 
+    if (showSnackbar) {
+        LaunchedEffect(Unit) {
+            delay(2000)
+            showSnackbar = false
+        }
+    }
     LaunchedEffect(productID) {
         viewModel.loadProductById(productID)
     }
@@ -66,7 +78,7 @@ fun ProductScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Handle cart click */ }) {
+                    IconButton(onClick = { onCartClick() }) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
                             contentDescription = "Cart"
@@ -94,17 +106,48 @@ fun ProductScreen(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize()
                     ) { page ->
-                        AsyncImage(
+                        SubcomposeAsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(product.imageLinks[page])
                                 .crossfade(true)
                                 .build(),
                             contentDescription = product.name,
-                            error = painterResource(R.drawable.ic_broken_image),
-                            placeholder = painterResource(R.drawable.loading_img),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
-                        )
+                        ) {
+                            when (painter.state) {
+                                is AsyncImagePainter.State.Loading -> {
+                                    Box(
+                                        modifier = modifier
+                                            .fillMaxSize()
+                                            .background(Color(0xFF0A1929)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            color = Color(0xFF2196F3)
+                                        )
+                                    }
+                                }
+
+                                is AsyncImagePainter.State.Error -> {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(Color(0xFF0A1929)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "Failed to load image",
+                                            color = Color.Gray
+                                        )
+                                    }
+                                }
+
+                                else -> {
+                                    SubcomposeAsyncImageContent()
+                                }
+                            }
+                        }
                     }
 
                     // Image indicator dots
@@ -199,7 +242,10 @@ fun ProductScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Button(
-                        onClick = { onAddToCart(product) },
+                        onClick = {
+                            cartViewModel.addToCart(product)
+                            showSnackbar = true
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -213,6 +259,14 @@ fun ProductScreen(
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+                }
+
+                if (showSnackbar) {
+                    Snackbar(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text("Item added to cart")
                     }
                 }
             }

@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -30,10 +32,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,12 +45,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.healthmate.model.Product
 import com.example.healthmate.viewmodel.AuthViewModel
+import com.example.healthmate.viewmodel.CartViewModel
 import com.example.healthmate.viewmodel.ProductUiState
 import com.example.healthmate.viewmodel.ProductViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -57,6 +64,7 @@ fun HomeScreen(
     onCategoryClick: (String) -> Unit,
     viewModel: ProductViewModel = koinViewModel(),
     authViewModel: AuthViewModel= koinViewModel(),
+    cartViewModel: CartViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -64,7 +72,14 @@ fun HomeScreen(
     val isSearchActive = searchQuery.isNotEmpty()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    var showSnackbar by remember { mutableStateOf(false) }
 
+    if (showSnackbar) {
+        LaunchedEffect(Unit) {
+            delay(2000)
+            showSnackbar = false
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -165,7 +180,10 @@ fun HomeScreen(
                             ProductGrid(
                                 products = state.products,
                                 onProductClick = onProductClick,
-                                onAddToCart = { /* Handle add to cart */ }
+                                onAddToCart = { product ->
+                                    cartViewModel.addToCart(product)
+                                    showSnackbar = true
+                                }
                             )
                         } else {
                             Column {
@@ -207,7 +225,10 @@ fun HomeScreen(
                                 ProductGrid(
                                     products = state.products,
                                     onProductClick = onProductClick,
-                                    onAddToCart = {}
+                                    onAddToCart = { product ->
+                                        cartViewModel.addToCart(product)
+                                        showSnackbar = true
+                                    }
                                 )
                             }
                         }
@@ -216,13 +237,24 @@ fun HomeScreen(
             }
         }
     }
+    if (showSnackbar) {
+        Snackbar(
+            modifier = Modifier
+                .padding(top = 900.dp, bottom = 24.dp)
+                .size(12.dp)
+                .background(Color.Blue)
+
+        ) {
+            Text("Item added to cart")
+        }
+    }
 }
 
 @Composable
 fun ProductGrid(
     products: List<Product>,
     onProductClick: (String) -> Unit,
-    onAddToCart: (String) -> Unit,
+    onAddToCart: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
@@ -236,7 +268,7 @@ fun ProductGrid(
             ProductGridItem(
                 product = product,
                 onClick = { onProductClick(product.id) },
-                onAddToCart = { onAddToCart(product.id) }
+                onAddToCart = { onAddToCart(product) }
             )
         }
     }

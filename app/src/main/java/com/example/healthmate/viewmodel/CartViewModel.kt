@@ -96,9 +96,10 @@ class CartViewModel(private val repository: Repository) : ViewModel() {
                 _cartState.value = _cartState.value.copy(isLoading = false)
             }
         }
-
-        fun clearError() {
-            _cartState.value = _cartState.value.copy(error = null)
-        }
     }
+
+    fun clearError() {
+        _cartState.value = _cartState.value.copy(error = null)
+    }
+
 }

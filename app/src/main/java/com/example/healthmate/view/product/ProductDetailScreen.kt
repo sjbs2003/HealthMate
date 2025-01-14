@@ -1,4 +1,4 @@
-package com.example.healthmate.view.productScreens
+package com.example.healthmate.view.product
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

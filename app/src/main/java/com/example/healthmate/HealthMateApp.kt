@@ -11,9 +11,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.healthmate.view.AuthScreen
-import com.example.healthmate.view.productScreens.CategoryScreen
-import com.example.healthmate.view.productScreens.HomeScreen
-import com.example.healthmate.view.productScreens.ProductScreen
+import com.example.healthmate.view.product.CategoryScreen
+import com.example.healthmate.view.product.HomeScreen
+import com.example.healthmate.view.product.ProductScreen
 import com.example.healthmate.viewmodel.AuthState
 import com.example.healthmate.viewmodel.AuthViewModel
 import com.example.healthmate.viewmodel.ProductViewModel

@@ -81,7 +81,8 @@ fun HealthMateApp() {
                 },
                 onCategoryClick = { categoryName ->
                     navController.navigate(Screens.Category.route.replace("{categoryName}", categoryName))
-                }
+                },
+                navController = navController
             )
         }
 

@@ -6,9 +6,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +26,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DrawerValue
@@ -44,10 +47,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.healthmate.Screens
 import com.example.healthmate.model.Product
 import com.example.healthmate.viewmodel.AuthViewModel
 import com.example.healthmate.viewmodel.CartViewModel
@@ -62,6 +68,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     onProductClick: (String) -> Unit,
     onCategoryClick: (String) -> Unit,
+    navController: NavController,
     viewModel: ProductViewModel = koinViewModel(),
     authViewModel: AuthViewModel= koinViewModel(),
     cartViewModel: CartViewModel = koinViewModel()
@@ -102,8 +109,32 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider()
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // Add your drawer items here if needed
+                    // Cart Item
+                    Row(
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                scope.launch {
+                                    drawerState.close()
+                                    navController.navigate(Screens.Cart.route)
+                                }
+                            }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Cart",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = "Cart",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                     Spacer(modifier = Modifier.weight(1f))
 
                     // Logout Button at bottom

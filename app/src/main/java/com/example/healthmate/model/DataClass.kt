@@ -147,6 +147,23 @@ data class OrderItem(
 )
 
 @Serializable
+data class CartItem(
+    val product: Product,
+    val quantity: Int
+)
+
+data class CartState(
+    val items: List<CartItem> = emptyList(),
+    val subtotal: Double = 0.0,
+    val deliveryFee: Double = 5.0,
+    val discount: Double = 0.0,
+    val total: Double = 0.0,
+    val promoCode: String? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+
+@Serializable
 data class Order(
     val id: String,
     val userId: String,

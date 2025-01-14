@@ -164,7 +164,6 @@ class ProductViewModel (private val repository: Repository): ViewModel() {
         }
     }
 
-
     fun setSelectedCategoryOnly(category: String) {
         _selectedCategory.value = category
     }

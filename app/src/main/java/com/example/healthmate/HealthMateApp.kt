@@ -11,11 +11,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.healthmate.view.AuthScreen
+import com.example.healthmate.view.cart.CartScreen
 import com.example.healthmate.view.product.CategoryScreen
 import com.example.healthmate.view.product.HomeScreen
 import com.example.healthmate.view.product.ProductScreen
 import com.example.healthmate.viewmodel.AuthState
 import com.example.healthmate.viewmodel.AuthViewModel
+import com.example.healthmate.viewmodel.CartViewModel
 import com.example.healthmate.viewmodel.ProductViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -25,7 +27,8 @@ enum class Screens(val route: String){
     Home("home"),
     ProductDetail("product/{productId}"),
     Category("category/{categoryName}"),
-    Brand("brand/{brandName}")
+    Brand("brand/{brandName}"),
+    Cart("cart")
 }
 
 
@@ -34,6 +37,7 @@ fun HealthMateApp() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = koinViewModel()
     val productViewModel: ProductViewModel = koinViewModel()
+    val cartViewModel: CartViewModel = koinViewModel()
     val authState by authViewModel.authState.collectAsState()
     val uiState by authViewModel.uiState.collectAsState()
 
@@ -89,7 +93,7 @@ fun HealthMateApp() {
             ProductScreen(
                 productID = productId,
                 onBackClick = { navController.popBackStack() },
-                onAddToCart = { TODO("implement cart functionality") }
+                onCartClick = { navController.navigate(Screens.Cart.route) }
             )
         }
 
@@ -124,6 +128,18 @@ fun HealthMateApp() {
                     navController.navigate(Screens.ProductDetail.route.replace("{productId}", productId))
                 },
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = Screens.Cart.route) {
+            CartScreen(
+                onBackClick = { navController.popBackStack() },
+                onCheckoutSuccess = {
+                    // After successful checkout, navigate back to home
+                    navController.navigate(Screens.Home.route) {
+                        popUpTo(Screens.Cart.route) { inclusive = true }
+                    }
+                }
             )
         }
     }

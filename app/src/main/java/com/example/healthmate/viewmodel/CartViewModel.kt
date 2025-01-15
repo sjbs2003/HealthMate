@@ -10,6 +10,7 @@ import com.example.healthmate.model.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CartViewModel(private val repository: Repository) : ViewModel() {
@@ -19,11 +20,11 @@ class CartViewModel(private val repository: Repository) : ViewModel() {
 
     fun addToCart(product: Product) {
         val currentItems = _cartState.value.items.toMutableList()
-        val existingItems = currentItems.find { it.product.id == product.id }
+        val existingItem = currentItems.find { it.product.id == product.id }
 
-        if (existingItems != null) {
-            val index = currentItems.indexOf(existingItems)
-            currentItems[index] = existingItems.copy(quantity = existingItems.quantity + 1)
+        if (existingItem != null) {
+            val index = currentItems.indexOf(existingItem)
+            currentItems[index] = existingItem.copy(quantity = existingItem.quantity + 1)
         } else {
             currentItems.add(CartItem(product, 1))
         }
@@ -31,47 +32,51 @@ class CartViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun removeFromCart(productId: String) {
-        val currentItems = _cartState.value.items.toMutableList()
-        currentItems.removeIf { it.product.id == productId }
-        updateCart(currentItems)
+        _cartState.update { currentState ->
+            val updatedItems = currentState.items.filterNot { it.product.id == productId }
+            currentState.copy(items = updatedItems).also { calculateTotals(it) }
+        }
     }
 
     fun updateQuantity(productId: String, newQuantity: Int) {
         if (newQuantity < 1) return
 
-        val currentItems = _cartState.value.items.toMutableList()
-        val existingItems = currentItems.find { it.product.id == productId } ?: return
-        val index = currentItems.indexOf(existingItems)
-        currentItems[index] = existingItems.copy(quantity = newQuantity)
-
-        updateCart(currentItems)
+        _cartState.update { currentState ->
+            val updatedItems = currentState.items.map { item ->
+                if (item.product.id == productId) {
+                    item.copy(quantity = newQuantity)
+                } else {
+                    item
+                }
+            }
+            currentState.copy(items = updatedItems).also { calculateTotals(it) }
+        }
     }
 
-    private fun updateCart(item: List<CartItem>) {
-        _cartState.value = _cartState.value.copy(items = item)
-        calculateTotals()
+    private fun updateCart(items: List<CartItem>) {
+        _cartState.update { currentState ->
+            currentState.copy(items = items).also { calculateTotals(it) }
+        }
     }
 
-    private fun calculateTotals() {
-        val subTotal = _cartState.value.items.sumOf {
-            it.product.price * it.quantity
-        }.toDouble()
+    private fun calculateTotals(state: CartState = _cartState.value) {
+        val subTotal = state.items.sumOf {
+            (it.product.price * it.quantity).toDouble()
+        }
 
-        val discount = subTotal * _cartState.value.discount
-        val deliveryFee = _cartState.value.deliveryFee
-        val total = subTotal - discount + deliveryFee
+        val discount = subTotal * state.discount
+        val total = subTotal - discount + state.deliveryFee
 
-        _cartState.value = _cartState.value.copy(
+        _cartState.update { it.copy(
             subtotal = subTotal,
             total = total
-        )
+        ) }
     }
 
     fun checkOut() {
         viewModelScope.launch {
-            _cartState.value = _cartState.value.copy(isLoading = true)
+            _cartState.update { it.copy(isLoading = true) }
             try {
-                // Convert cart items to OrderProductItem list
                 val orderItems = _cartState.value.items.map {
                     OrderProductItem(it.product.id, it.quantity)
                 }
@@ -79,27 +84,26 @@ class CartViewModel(private val repository: Repository) : ViewModel() {
                 val result = repository.createOrder(orderItems)
                 result.fold(
                     onSuccess = {
-                        // Convert cart items to OrderProductItem list
+                        // Clear cart after successful checkout
                         _cartState.value = CartState()
                     },
                     onFailure = { exception ->
-                        _cartState.value = _cartState.value.copy(
-                            error = exception.message ?: "Checkout failed"
-                        )
+                        _cartState.update { it.copy(
+                            error = exception.message ?: "Checkout failed",
+                            isLoading = false
+                        ) }
                     }
                 )
             } catch (e: Exception) {
-                _cartState.value = _cartState.value.copy(
-                    error = e.message ?: "Checkout failed"
-                )
-            } finally {
-                _cartState.value = _cartState.value.copy(isLoading = false)
+                _cartState.update { it.copy(
+                    error = e.message ?: "Checkout failed",
+                    isLoading = false
+                ) }
             }
         }
     }
 
     fun clearError() {
-        _cartState.value = _cartState.value.copy(error = null)
+        _cartState.update { it.copy(error = null) }
     }
-
 }

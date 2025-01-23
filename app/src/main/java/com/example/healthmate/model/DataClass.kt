@@ -5,16 +5,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class ProductType {
-    @SerialName("capsule")
-    CAPSULE,
-    @SerialName("tablet")
-    TABLET,
-    @SerialName("powder")
-    POWDER,
-    @SerialName("sachet")
-    SACHET,
-    @SerialName("other")
-    OTHER
+    @SerialName("capsule") CAPSULE,
+    @SerialName("tablet") TABLET,
+    @SerialName("powder") POWDER,
+    @SerialName("sachet") SACHET,
+    @SerialName("other") OTHER,
+    @SerialName("liquid") LIQUID
 }
 
 @Serializable
@@ -102,12 +98,14 @@ data class Product(
     val name: String,
     val description: String,
     @SerialName("imageLink") val imageLinks: List<String>,
+    val thumbnail: String,  // New field
     val type: MedsType,
     val productType: ProductType,
     val quantity: Int,
     val categories: List<Category>,
     val brand: String,
-    val price: Int
+    val price: Int,
+    val discountPer: Int = 0  // New field
 )
 
 @Serializable
@@ -140,13 +138,6 @@ data class CategoryResponse(
 )
 
 @Serializable
-data class OrderItem(
-    val id: String,
-    val productId: String,
-    val quantity: Int
-)
-
-@Serializable
 data class CartItem(
     val product: Product,
     val quantity: Int
@@ -161,6 +152,13 @@ data class CartState(
     val promoCode: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null
+)
+
+@Serializable
+data class OrderItem(
+    val id: String,
+    val productId: String,
+    val quantity: Int
 )
 
 @Serializable
@@ -236,10 +234,15 @@ data class OtpVerificationRequest(
 @Serializable
 data class AuthResponse(
     val success: Boolean,
-    val token: String? = null,
-    val error: String? = null,
-    val message: String? = null
+    val message: String? = null,
+    val data: AuthData? = null
 )
+
+@Serializable
+data class AuthData(
+    val token: String
+)
+
 
 @Serializable
 data class ChatRequest(

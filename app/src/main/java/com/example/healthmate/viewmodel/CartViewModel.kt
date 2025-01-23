@@ -3,23 +3,35 @@ package com.example.healthmate.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.healthmate.model.CartItem
-import com.example.healthmate.model.CartState
 import com.example.healthmate.model.OrderProductItem
 import com.example.healthmate.model.Product
 import com.example.healthmate.model.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+sealed class CartUiState {
+    data object Loading : CartUiState()
+    data class Success(
+        val items: List<CartItem> = emptyList(),
+        val subtotal: Double = 0.0,
+        val deliveryFee: Double = 5.0,
+        val discount: Double = 0.0,
+        val total: Double = 0.0,
+        val promoCode: String? = null
+    ) : CartUiState()
+    data class Error(val message: String) : CartUiState()
+}
 
 class CartViewModel(private val repository: Repository) : ViewModel() {
 
-    private val _cartState = MutableStateFlow(CartState())
-    val cartState: StateFlow<CartState> = _cartState.asStateFlow()
+    private val _uiState = MutableStateFlow<CartUiState>(CartUiState.Success())
+    val uiState: StateFlow<CartUiState> = _uiState.asStateFlow()
 
     fun addToCart(product: Product) {
-        val currentItems = _cartState.value.items.toMutableList()
+        val currentState = _uiState.value as? CartUiState.Success ?: return
+        val currentItems = currentState.items.toMutableList()
         val existingItem = currentItems.find { it.product.id == product.id }
 
         if (existingItem != null) {
@@ -32,78 +44,74 @@ class CartViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun removeFromCart(productId: String) {
-        _cartState.update { currentState ->
-            val updatedItems = currentState.items.filterNot { it.product.id == productId }
-            currentState.copy(items = updatedItems).also { calculateTotals(it) }
-        }
+        val currentState = _uiState.value as? CartUiState.Success ?: return
+        val currentItems = currentState.items.toMutableList()
+        currentItems.removeIf { it.product.id == productId }
+        updateCart(currentItems)
     }
 
     fun updateQuantity(productId: String, newQuantity: Int) {
         if (newQuantity < 1) return
-
-        _cartState.update { currentState ->
-            val updatedItems = currentState.items.map { item ->
-                if (item.product.id == productId) {
-                    item.copy(quantity = newQuantity)
-                } else {
-                    item
-                }
-            }
-            currentState.copy(items = updatedItems).also { calculateTotals(it) }
-        }
+        val currentState = _uiState.value as? CartUiState.Success ?: return
+        val currentItems = currentState.items.toMutableList()
+        val existingItem = currentItems.find { it.product.id == productId } ?: return
+        val index = currentItems.indexOf(existingItem)
+        currentItems[index] = existingItem.copy(quantity = newQuantity)
+        updateCart(currentItems)
     }
 
     private fun updateCart(items: List<CartItem>) {
-        _cartState.update { currentState ->
-            currentState.copy(items = items).also { calculateTotals(it) }
-        }
-    }
+        val currentState = _uiState.value as? CartUiState.Success ?: return
 
-    private fun calculateTotals(state: CartState = _cartState.value) {
-        val subTotal = state.items.sumOf {
+        val subTotal = items.sumOf {
             (it.product.price * it.quantity).toDouble()
         }
 
-        val discount = subTotal * state.discount
-        val total = subTotal - discount + state.deliveryFee
+        val discount = subTotal * currentState.discount
+        val total = subTotal - discount + currentState.deliveryFee
 
-        _cartState.update { it.copy(
+        _uiState.value = CartUiState.Success(
+            items = items,
             subtotal = subTotal,
-            total = total
-        ) }
+            deliveryFee = currentState.deliveryFee,
+            discount = currentState.discount,
+            total = total,
+            promoCode = currentState.promoCode
+        )
     }
 
     fun checkOut() {
         viewModelScope.launch {
-            _cartState.update { it.copy(isLoading = true) }
+            val currentState = _uiState.value as? CartUiState.Success ?: return@launch
+            _uiState.value = CartUiState.Loading
+
             try {
-                val orderItems = _cartState.value.items.map {
+                val orderItems = currentState.items.map {
                     OrderProductItem(it.product.id, it.quantity)
                 }
 
                 val result = repository.createOrder(orderItems)
                 result.fold(
                     onSuccess = {
-                        // Clear cart after successful checkout
-                        _cartState.value = CartState()
+                        _uiState.value = CartUiState.Success() // Reset cart
                     },
                     onFailure = { exception ->
-                        _cartState.update { it.copy(
-                            error = exception.message ?: "Checkout failed",
-                            isLoading = false
-                        ) }
+                        _uiState.value = CartUiState.Error(
+                            exception.message ?: "Checkout failed"
+                        )
                     }
                 )
             } catch (e: Exception) {
-                _cartState.update { it.copy(
-                    error = e.message ?: "Checkout failed",
-                    isLoading = false
-                ) }
+                _uiState.value = CartUiState.Error(
+                    e.message ?: "Checkout failed"
+                )
             }
         }
     }
 
     fun clearError() {
-        _cartState.update { it.copy(error = null) }
+        if (_uiState.value is CartUiState.Error) {
+            _uiState.value = CartUiState.Success()
+        }
     }
 }

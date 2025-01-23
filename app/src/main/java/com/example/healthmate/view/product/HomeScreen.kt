@@ -23,7 +23,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
@@ -144,6 +146,32 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             text = "ADMIN",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    HorizontalDivider()
+
+                    // Chat
+                    Row(
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                scope.launch {
+                                    drawerState.close()
+                                    navController.navigate(Screens.Chat.route)
+                                }
+                            }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.List,
+                            contentDescription = "Chat",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = "CHAT",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }

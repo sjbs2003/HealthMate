@@ -7,4 +7,5 @@ val viewModelModule = module {
     viewModel { AuthViewModel(get(), get()) }
     viewModel { ProductViewModel(get()) }
     viewModel { CartViewModel(get()) }
+    viewModel { ChatViewModel(get()) }
 }

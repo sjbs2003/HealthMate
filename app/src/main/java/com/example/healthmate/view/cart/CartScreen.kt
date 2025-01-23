@@ -55,7 +55,7 @@ import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import com.example.healthmate.R
 import com.example.healthmate.model.CartItem
-import com.example.healthmate.model.CartState
+import com.example.healthmate.viewmodel.CartUiState
 import com.example.healthmate.viewmodel.CartViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -68,7 +68,7 @@ fun CartScreen(
     onCheckoutSuccess: () -> Unit,
     viewModel: CartViewModel = koinViewModel()
 ) {
-    val cartState by viewModel.cartState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -91,72 +91,45 @@ fun CartScreen(
             )
         }
     ) { padding ->
-        if (cartState.items.isEmpty()) {
-            EmptyCartMessage(
-                modifier = modifier.padding(padding)
-            )
-        } else {
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                // Cart Items List (scrollable)
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(cartState.items) { cartItem ->
-                        CartItemCard(
-                            cartItem = cartItem,
-                            onQuantityChange = { newQuantity ->
-                                viewModel.updateQuantity(cartItem.product.id, newQuantity)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when (uiState) {
+                is CartUiState.Loading -> {
+                    LoadingIndicator()
+                }
+                is CartUiState.Error -> {
+                    ErrorDialog(
+                        message = (uiState as CartUiState.Error).message,
+                        onDismiss = { viewModel.clearError() }
+                    )
+                }
+                is CartUiState.Success -> {
+                    val state = uiState as CartUiState.Success
+                    if (state.items.isEmpty()) {
+                        EmptyCartMessage(modifier = modifier)
+                    } else {
+                        CartContent(
+                            state = state,
+                            onQuantityChange = { productId, quantity ->
+                                viewModel.updateQuantity(productId, quantity)
                             },
-                            onRemove = {
-                                viewModel.removeFromCart(cartItem.product.id)
+                            onRemoveItem = { productId ->
+                                viewModel.removeFromCart(productId)
+                            },
+                            onCheckout = {
+                                viewModel.checkOut()
                             }
                         )
                     }
                 }
-
-                // Order Summary Card
-                OrderSummaryCard(
-                    cartState = cartState,
-                    onCheckout = {
-                        viewModel.checkOut()
-                    }
-                )
             }
-        }
-
-        // Show loading indicator
-        if (cartState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-
-        // Show error dialog if there's an error
-        cartState.error?.let { error ->
-            AlertDialog(
-                onDismissRequest = { viewModel.clearError() },
-                title = { Text("Error") },
-                text = { Text(error) },
-                confirmButton = {
-                    TextButton(onClick = { viewModel.clearError() }) {
-                        Text("OK")
-                    }
-                }
-            )
         }
     }
 }
+
 @Composable
 fun EmptyCartMessage(modifier: Modifier = Modifier) {
     Column(
@@ -321,8 +294,71 @@ fun CartItemCard(
 }
 
 @Composable
+fun LoadingIndicator() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun ErrorDialog(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Error") },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("OK")
+            }
+        }
+    )
+}
+
+@Composable
+fun CartContent(
+    state: CartUiState.Success,
+    onQuantityChange: (String, Int) -> Unit,
+    onRemoveItem: (String) -> Unit,
+    onCheckout: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(state.items) { cartItem ->
+                CartItemCard(
+                    cartItem = cartItem,
+                    onQuantityChange = { quantity ->
+                        onQuantityChange(cartItem.product.id, quantity)
+                    },
+                    onRemove = { onRemoveItem(cartItem.product.id) }
+                )
+            }
+        }
+
+        OrderSummaryCard(
+            state = state,
+            onCheckout = onCheckout
+        )
+    }
+}
+
+@Composable
 fun OrderSummaryCard(
-    cartState: CartState,
+    state: CartUiState.Success,
     onCheckout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -335,18 +371,17 @@ fun OrderSummaryCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // Order Summary
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OrderSummaryRow("Subtotal", "₹${cartState.subtotal}")
-                OrderSummaryRow("Delivery Fee", "₹${cartState.deliveryFee}")
+                OrderSummaryRow("Subtotal", "₹${state.subtotal}")
+                OrderSummaryRow("Delivery Fee", "₹${state.deliveryFee}")
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
                 OrderSummaryRow(
                     "Total",
-                    "₹${cartState.total}",
+                    "₹${state.total}",
                     MaterialTheme.colorScheme.primary,
                     MaterialTheme.typography.titleLarge
                 )
@@ -354,7 +389,6 @@ fun OrderSummaryCard(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Checkout Button
             Button(
                 onClick = onCheckout,
                 modifier = Modifier

@@ -12,12 +12,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.healthmate.view.AuthScreen
 import com.example.healthmate.view.cart.CartScreen
+import com.example.healthmate.view.chat.ChatScreen
 import com.example.healthmate.view.product.CategoryScreen
 import com.example.healthmate.view.product.HomeScreen
 import com.example.healthmate.view.product.ProductScreen
 import com.example.healthmate.viewmodel.AuthState
 import com.example.healthmate.viewmodel.AuthViewModel
 import com.example.healthmate.viewmodel.CartViewModel
+import com.example.healthmate.viewmodel.ChatViewModel
 import com.example.healthmate.viewmodel.ProductViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -28,7 +30,8 @@ enum class Screens(val route: String){
     ProductDetail("product/{productId}"),
     Category("category/{categoryName}"),
     Brand("brand/{brandName}"),
-    Cart("cart")
+    Cart("cart"),
+    Chat("chat")
 }
 
 
@@ -38,6 +41,7 @@ fun HealthMateApp() {
     val authViewModel: AuthViewModel = koinViewModel()
     val productViewModel: ProductViewModel = koinViewModel()
     val cartViewModel: CartViewModel = koinViewModel()
+    val chatViewModel: ChatViewModel = koinViewModel()
     val authState by authViewModel.authState.collectAsState()
     val uiState by authViewModel.uiState.collectAsState()
 
@@ -143,5 +147,12 @@ fun HealthMateApp() {
                 }
             )
         }
+
+        composable(route = Screens.Chat.route) {
+            ChatScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
     }
 }

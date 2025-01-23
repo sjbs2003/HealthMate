@@ -84,6 +84,8 @@ dependencies {
 
     // MasterKey
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    implementation("com.google.ai.client.generativeai:generativeai:0.1.2")
 }
 
 

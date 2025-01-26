@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
@@ -178,7 +179,7 @@ fun CartItemCard(
             // productImage
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(cartItem.product.imageLinks.firstOrNull())
+                    .data(cartItem.product.thumbnail)
                     .crossfade(true)
                     .build(),
                 contentDescription = cartItem.product.name,
@@ -230,12 +231,27 @@ fun CartItemCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = "₹${cartItem.product.price}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val discountedPrice = cartItem.product.price
+                    Text(
+                        text = "₹$discountedPrice",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (cartItem.product.discountPer > 0) {
+                        val originalPrice = cartItem.product.price * 100 / (100 - cartItem.product.discountPer)
+                        Text(
+                            text = "₹$originalPrice",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textDecoration = TextDecoration.LineThrough,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
             }
             Spacer(modifier = modifier.width(12.dp))
 

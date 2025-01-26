@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -56,6 +57,7 @@ import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import com.example.healthmate.R
 import com.example.healthmate.model.CartItem
+import com.example.healthmate.model.OrderStatus
 import com.example.healthmate.viewmodel.CartUiState
 import com.example.healthmate.viewmodel.CartViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -441,6 +443,39 @@ fun OrderSummaryRow(
             text = value,
             style = textStyle,
             color = valueColor
+        )
+    }
+}
+
+@Composable
+fun OrderStatusBadge(status: OrderStatus) {
+    val (backgroundColor, textColor, text) = when (status) {
+        OrderStatus.PENDING -> Triple(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+            MaterialTheme.colorScheme.primary,
+            "Pending"
+        )
+        OrderStatus.COMPLETED -> Triple(
+            Color.Green.copy(alpha = 0.1f),
+            Color.Green,
+            "Completed"
+        )
+        OrderStatus.CANCELLED -> Triple(
+            MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+            MaterialTheme.colorScheme.error,
+            "Cancelled"
+        )
+    }
+
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            color = textColor,
+            style = MaterialTheme.typography.labelMedium
         )
     }
 }

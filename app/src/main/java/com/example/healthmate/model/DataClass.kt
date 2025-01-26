@@ -27,14 +27,9 @@ enum class MedsType {
 
 @Serializable
 enum class OrderStatus {
-    @SerialName("pending")
-    PENDING,
-    @SerialName("completed")
-    COMPLETED,
-    @SerialName("canceled")
-    CANCELED,
-    @SerialName("refunded")
-    REFUNDED
+    @SerialName("pending") PENDING,
+    @SerialName("completed") COMPLETED,
+    @SerialName("cancelled") CANCELLED
 }
 
 @Serializable

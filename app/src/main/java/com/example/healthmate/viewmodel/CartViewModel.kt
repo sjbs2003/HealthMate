@@ -63,20 +63,23 @@ class CartViewModel(private val repository: Repository) : ViewModel() {
     private fun updateCart(items: List<CartItem>) {
         val currentState = _uiState.value as? CartUiState.Success ?: return
 
-        val subTotal = items.sumOf {
-            (it.product.price * it.quantity).toDouble()
+        val subTotal = items.sumOf { cartItem ->
+            val product = cartItem.product
+            val discountedPrice = if (product.discountPer > 0) {
+                product.price * (100 - product.discountPer) / 100.0
+            } else {
+                product.price.toDouble()
+            }
+            discountedPrice * cartItem.quantity
         }
 
-        val discount = subTotal * currentState.discount
-        val total = subTotal - discount + currentState.deliveryFee
+        val total = subTotal + currentState.deliveryFee
 
         _uiState.value = CartUiState.Success(
             items = items,
             subtotal = subTotal,
             deliveryFee = currentState.deliveryFee,
-            discount = currentState.discount,
-            total = total,
-            promoCode = currentState.promoCode
+            total = total
         )
     }
 

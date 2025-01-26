@@ -163,6 +163,27 @@ fun ProductScreen(
                         }
                     }
 
+                    // Discount Badge
+                    if (product.discountPer > 0) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(16.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.error,
+                                    RoundedCornerShape(4.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "${product.discountPer}% OFF",
+                                color = Color.White,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
                     // Image indicator dots
                     Row(
                         modifier = Modifier

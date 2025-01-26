@@ -17,9 +17,19 @@ val networkModule = module {
         }
     }
     single {
+        val authManager: AuthManager = get()
         OkHttpClient.Builder()
             .addInterceptor { chain ->
-                val request = chain.request()
+                val original = chain.request()
+                val token = authManager.getAuthToken()
+                val request = if (token != null) {
+                    original.newBuilder()
+                        .header("auth", "Bearer $token")
+                        .build()
+                } else {
+                    original
+                }
+
                 println("Making Request: ${request.url}")
                 val response = chain.proceed(request)
                 println("Got Response: ${response.code}")

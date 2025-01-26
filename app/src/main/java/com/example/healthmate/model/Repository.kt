@@ -1,9 +1,6 @@
 package com.example.healthmate.model
 
-
-class Repository (
-    private val apiService: ApiService
-) {
+class Repository (private val apiService: ApiService) {
 
     // PRODUCT RELATED OPERATIONS
     suspend fun getAllProducts(): Result<List<Product>> = try {
@@ -43,12 +40,12 @@ class Repository (
 
     suspend fun getSortedProducts(order: String?, type: String?): Result<List<Product>> = try {
         val response = apiService.getSortedProducts(ProductSortRequest(order, type))
-        if (response.success && response.data != null){
+        if (response.success && response.data != null) {
             Result.success(response.data)
         } else {
-            Result.failure(Exception(response.message ?: "Unknown error occurred"))
+            Result.failure(Exception(response.message ?: "Failed to sort products"))
         }
-    } catch (e: Exception){
+    } catch (e: Exception) {
         Result.failure(e)
     }
 
@@ -101,40 +98,40 @@ class Repository (
     // Auth Related Operations
     suspend fun signup(name: String, phone: String, email: String? = null): Result<String> = try {
         val response = apiService.signup(SignupRequest(name, phone, email))
-        if (response.success && response.token != null) {
-            Result.success(response.token)
+        if (response.success && response.data?.token != null) {
+            Result.success(response.data.token)
         } else {
-            Result.failure(Exception(response.error ?: "SignUp Failed"))
+            Result.failure(Exception(response.message ?: "SignUp Failed"))
         }
-    } catch (e: Exception){
+    } catch (e: Exception) {
         Result.failure(e)
     }
 
     suspend fun login(phone: String): Result<String> = try {
         val response = apiService.login(LoginRequest(phone))
         if (response.success) {
-            Result.success(response.message ?: "Otp sent successfully")
+            Result.success(response.message ?: "OTP sent successfully")
         } else {
-            Result.failure(Exception(response.error ?: "Login Failed"))
+            Result.failure(Exception(response.message ?: "Login Failed"))
         }
-    } catch (e: Exception){
+    } catch (e: Exception) {
         Result.failure(e)
     }
 
     suspend fun verifyOTP(phone: String, otp: String): Result<String> = try {
         val response = apiService.verifyOTP(OtpVerificationRequest(phone, otp))
-        if (response.success && response.token != null) {
-            Result.success(response.token)
+        if (response.success && response.data?.token != null) {
+            Result.success(response.data.token)
         } else {
-            Result.failure(Exception(response.error ?: "OTP Verification Failed"))
+            Result.failure(Exception(response.message ?: "OTP Verification Failed"))
         }
-    } catch (e: Exception){
+    } catch (e: Exception) {
         Result.failure(e)
     }
 
     // ORDER RELATED OPERATIONS
-    suspend fun createOrder(product : List<OrderProductItem>): Result<Order> = try {
-        val response = apiService.createOrder(OrderCreateRequest(product))
+    suspend fun createOrder(items: List<OrderProductItem>): Result<Order> = try {
+        val response = apiService.createOrder(OrderCreateRequest(items))
         if (response.success && response.data != null) {
             Result.success(response.data)
         } else {
